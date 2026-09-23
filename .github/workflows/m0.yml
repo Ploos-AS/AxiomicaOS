@@ -1,0 +1,31 @@
+name: AxiomicaOS M0
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build-and-boot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build and boot tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-multilib binutils grub-pc-bin xorriso qemu-system-x86
+
+      - name: Build ISO
+        run: make
+
+      - name: Verify Multiboot2 kernel
+        run: grub-file --is-x86-multiboot2 build/axiomicaos.kernel
+
+      - name: Boot test
+        run: |
+          set -o pipefail
+          timeout 5s qemu-system-i386 -cdrom build/axiomicaos.iso -serial stdio -display none -no-reboot -no-shutdown 2>&1 | tee qemu.log || test $? -eq 124
+          grep -F "AxiomicaOS M0" qemu.log
+          grep -F "Kernel foundation online." qemu.log
+          grep -F "Multiboot2 magic: valid" qemu.log
+          grep -F "Built from first principles." qemu.log
