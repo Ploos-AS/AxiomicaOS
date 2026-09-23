@@ -2,12 +2,14 @@ CC ?= gcc
 AS := $(CC)
 LD ?= ld
 
+CPPFLAGS := -Iinclude
 CFLAGS := -m32 -ffreestanding -fno-pie -fno-stack-protector -Wall -Wextra -Werror -O2
 LDFLAGS := -m elf_i386 -nostdlib -T linker.ld
 
 BUILD := build
 KERNEL := $(BUILD)/axiomicaos.kernel
 ISO := $(BUILD)/axiomicaos.iso
+OBJECTS := $(BUILD)/boot.o $(BUILD)/main.o $(BUILD)/platform.o
 
 .PHONY: all clean iso run
 
@@ -16,14 +18,17 @@ all: iso
 $(BUILD):
 	mkdir -p $(BUILD)
 
-$(BUILD)/boot.o: kernel/boot.S | $(BUILD)
+$(BUILD)/boot.o: arch/x86/boot.S | $(BUILD)
 	$(AS) -m32 -c $< -o $@
 
-$(BUILD)/kernel.o: kernel/kernel.c | $(BUILD)
-	$(CC) $(CFLAGS) -c $< -o $@
+$(BUILD)/main.o: kernel/main.c include/axiomica/platform.h | $(BUILD)
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
 
-$(KERNEL): $(BUILD)/boot.o $(BUILD)/kernel.o linker.ld
-	$(LD) $(LDFLAGS) -o $@ $(BUILD)/boot.o $(BUILD)/kernel.o
+$(BUILD)/platform.o: machines/pc/platform.c include/axiomica/platform.h | $(BUILD)
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+
+$(KERNEL): $(OBJECTS) linker.ld
+	$(LD) $(LDFLAGS) -o $@ $(OBJECTS)
 
 iso: $(KERNEL)
 	rm -rf $(BUILD)/iso
