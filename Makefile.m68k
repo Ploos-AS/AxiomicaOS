@@ -11,11 +11,12 @@ M68K_LDFLAGS := -nostdlib -T linker-amiga.ld
 M68K_BUILD := build/m68k-amiga
 M68K_ELF := $(M68K_BUILD)/axiomicaos-amiga.elf
 M68K_BIN := $(M68K_BUILD)/axiomicaos-amiga.bin
+M68K_BOOT := $(M68K_BUILD)/axiomicaos-amiga.axam
 M68K_OBJECTS := $(M68K_BUILD)/boot.o $(M68K_BUILD)/main.o $(M68K_BUILD)/cpu.o $(M68K_BUILD)/vectors.o $(M68K_BUILD)/platform.o
 
 .PHONY: m68k-amiga m68k-clean
 
-m68k-amiga: $(M68K_BIN)
+m68k-amiga: $(M68K_BOOT)
 
 $(M68K_BUILD):
 	mkdir -p $(M68K_BUILD)
@@ -40,6 +41,10 @@ $(M68K_ELF): $(M68K_OBJECTS) linker-amiga.ld
 
 $(M68K_BIN): $(M68K_ELF)
 	$(M68K_OBJCOPY) -O binary $< $@
+
+$(M68K_BOOT): $(M68K_BIN) tools/amiga/mkboot.py
+	python3 tools/amiga/mkboot.py $(M68K_BIN) $@
+	python3 tools/amiga/checkboot.py $@
 
 m68k-clean:
 	rm -rf $(M68K_BUILD)
