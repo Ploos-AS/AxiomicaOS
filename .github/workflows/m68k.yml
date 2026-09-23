@@ -1,0 +1,32 @@
+name: AxiomicaOS m68k
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  amiga-cross-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install m68k cross toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-m68k-linux-gnu binutils-m68k-linux-gnu
+
+      - name: Build bare-metal Amiga image
+        run: make -f Makefile.m68k m68k-amiga
+
+      - name: Inspect image
+        run: |
+          file build/m68k-amiga/axiomicaos-amiga.elf
+          m68k-linux-gnu-readelf -h build/m68k-amiga/axiomicaos-amiga.elf
+          test -s build/m68k-amiga/axiomicaos-amiga.bin
+
+      - name: Reject hosted runtime dependencies
+        run: |
+          if m68k-linux-gnu-readelf -d build/m68k-amiga/axiomicaos-amiga.elf 2>/dev/null | grep -q NEEDED; then
+            echo "Unexpected hosted runtime dependency"
+            exit 1
+          fi
