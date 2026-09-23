@@ -26,3 +26,9 @@ The first required profile is:
 After A500/68000 passes, repeat on A500+/ECS and A1200/68020 as regression profiles. Amiberry and FellowNG can be added after the reference path is deterministic.
 
 A build or valid boot-block checksum is not a runtime PASS. PASS requires observed execution reaching the AxiomicaOS kernel marker in an emulator or on hardware.
+
+## Machine-readable oracle
+
+In addition to COLOR00, the kernel writes a fixed byte to CIA-A PRA during bring-up: 0xA5 when platform initialization is reached and 0x5A immediately before the kernel halt loop. This gives emulator/debugger integrations a simple memory-mapped state to inspect without OCR or framebuffer analysis.
+
+The CIA oracle is a bring-up mechanism, not a permanent userspace ABI. It may move to a dedicated debug device once the driver model exists.
