@@ -1,0 +1,45 @@
+M68K_PREFIX ?= m68k-linux-gnu-
+M68K_CC := $(M68K_PREFIX)gcc
+M68K_AS := $(M68K_PREFIX)gcc
+M68K_LD := $(M68K_PREFIX)ld
+M68K_OBJCOPY := $(M68K_PREFIX)objcopy
+
+M68K_CPPFLAGS := -Iinclude
+M68K_CFLAGS := -m68000 -ffreestanding -fno-pie -fno-stack-protector -Wall -Wextra -Werror -Os
+M68K_LDFLAGS := -nostdlib -T linker-amiga.ld
+
+M68K_BUILD := build/m68k-amiga
+M68K_ELF := $(M68K_BUILD)/axiomicaos-amiga.elf
+M68K_BIN := $(M68K_BUILD)/axiomicaos-amiga.bin
+M68K_OBJECTS := $(M68K_BUILD)/boot.o $(M68K_BUILD)/main.o $(M68K_BUILD)/cpu.o $(M68K_BUILD)/vectors.o $(M68K_BUILD)/platform.o
+
+.PHONY: m68k-amiga m68k-clean
+
+m68k-amiga: $(M68K_BIN)
+
+$(M68K_BUILD):
+	mkdir -p $(M68K_BUILD)
+
+$(M68K_BUILD)/boot.o: machines/amiga/boot.S | $(M68K_BUILD)
+	$(M68K_AS) -m68000 -c $< -o $@
+
+$(M68K_BUILD)/main.o: kernel/main.c | $(M68K_BUILD)
+	$(M68K_CC) $(M68K_CPPFLAGS) $(M68K_CFLAGS) -c $< -o $@
+
+$(M68K_BUILD)/cpu.o: arch/m68k/cpu.c | $(M68K_BUILD)
+	$(M68K_CC) $(M68K_CPPFLAGS) $(M68K_CFLAGS) -c $< -o $@
+
+$(M68K_BUILD)/vectors.o: arch/m68k/vectors.S | $(M68K_BUILD)
+	$(M68K_AS) -m68000 -c $< -o $@
+
+$(M68K_BUILD)/platform.o: machines/amiga/early.c machines/amiga/hardware.h | $(M68K_BUILD)
+	$(M68K_CC) $(M68K_CPPFLAGS) $(M68K_CFLAGS) -c $< -o $@
+
+$(M68K_ELF): $(M68K_OBJECTS) linker-amiga.ld
+	$(M68K_LD) $(M68K_LDFLAGS) -o $@ $(M68K_OBJECTS)
+
+$(M68K_BIN): $(M68K_ELF)
+	$(M68K_OBJCOPY) -O binary $< $@
+
+m68k-clean:
+	rm -rf $(M68K_BUILD)
