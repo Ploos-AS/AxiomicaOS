@@ -1,72 +1,135 @@
 /*
- * AxiomicaOS Amiga stage-0 boot block.
+ * AxiomicaOS Amiga stage-0 loader, 68000 baseline.
  *
- * The Amiga ROM boot process enters a boot block with ExecBase in A6 and a
- * boot I/O request in A1. Stage-0 uses the ROM-provided device I/O only to
- * fetch the remaining sectors, then transfers to the freestanding kernel.
- * No AmigaOS service is required after kernel entry.
- *
- * M0.3 keeps this loader intentionally tiny and 68000-compatible.
+ * ROM/Exec is used only as the initial disk transport. Once the complete
+ * AXAM payload has been validated and copied, control is transferred to the
+ * freestanding AxiomicaOS entry point.
  */
 
     .text
     .globl axiomica_amiga_stage0
     .type axiomica_amiga_stage0,@function
 
-/* Exec LVOs used only by stage-0. */
 .set _LVODoIO, -456
-
-/* IORequest offsets used by trackdisk.device. */
+.set IO_ERROR,   31
 .set IO_COMMAND, 28
-.set IO_ACTUAL, 32
-.set IO_LENGTH, 36
-.set IO_DATA, 40
-.set IO_OFFSET, 44
+.set IO_LENGTH,  36
+.set IO_DATA,    40
+.set IO_OFFSET,  44
+.set CMD_READ,   2
 
-.set CMD_READ, 2
-.set PAYLOAD_DISK_OFFSET, 1024
-.set LOAD_ADDRESS, 0x00100000
-.set MAX_PAYLOAD, 0x000C0000
+.set AXAM_DISK_OFFSET, 1024
+.set AXAM_HEADER_SIZE, 32
+.set LOAD_ADDRESS,     0x00100000
+.set MAX_PAYLOAD,      0x000C0000
 
 axiomica_amiga_stage0:
     move.l  %a1,%a2
     lea     stage0_sector_buffer,%a0
 
-    /* Read first payload sector containing the AXAM header. */
+    /* Read the first AXAM sector. */
     move.w  #CMD_READ,IO_COMMAND(%a2)
     move.l  #512,IO_LENGTH(%a2)
     move.l  %a0,IO_DATA(%a2)
-    move.l  #PAYLOAD_DISK_OFFSET,IO_OFFSET(%a2)
-    move.l  %a2,%a1
-    jsr     _LVODoIO(%a6)
-    tst.b   31(%a2)
-    bne.s   stage0_fail
+    move.l  #AXAM_DISK_OFFSET,IO_OFFSET(%a2)
+    bsr     stage0_doio
+    tst.l   %d0
+    bne     stage0_fail
 
-    /* AXAM magic and fixed header fields. */
-    cmpi.l  #0x4158414d,(%a0)
-    bne.s   stage0_fail
+    cmpi.l  #0x4158414d,(%a0)       /* AXAM */
+    bne     stage0_fail
     cmpi.l  #1,4(%a0)
-    bne.s   stage0_fail
-    cmpi.l  #32,8(%a0)
-    bne.s   stage0_fail
+    bne     stage0_fail
+    cmpi.l  #AXAM_HEADER_SIZE,8(%a0)
+    bne     stage0_fail
     cmpi.l  #LOAD_ADDRESS,12(%a0)
-    bne.s   stage0_fail
+    bne     stage0_fail
 
-    move.l  16(%a0),%d6
-    beq.s   stage0_fail
+    move.l  16(%a0),%d6             /* payload bytes */
+    beq     stage0_fail
     cmpi.l  #MAX_PAYLOAD,%d6
-    bhi.s   stage0_fail
+    bhi     stage0_fail
+    move.l  20(%a0),%d7             /* expected additive checksum */
 
     /*
-     * Read the raw kernel payload, skipping the 32-byte AXAM header.
-     * Trackdisk reads are sector based, so M0.3 uses a bounce buffer path;
-     * the complete copy/checksum loop is the next qualification step.
+     * The payload starts 32 bytes into the first AXAM sector. Copy those
+     * bytes, then read following disk sectors into the bounce buffer.
      */
-    moveq   #0,%d0
-    rts
+    lea     32(%a0),%a3
+    move.l  #LOAD_ADDRESS,%a4
+    move.l  %d6,%d5
+    move.l  #AXAM_DISK_OFFSET+512,%d4
+    clr.l   %d3                     /* checksum */
+
+    move.l  %d5,%d2
+    cmpi.l  #480,%d2
+    bls.s   1f
+    move.l  #480,%d2
+1:
+    bsr     stage0_copy_bytes
+    sub.l   %d2,%d5
+    beq.s   stage0_verify
+
+stage0_read_loop:
+    lea     stage0_sector_buffer,%a0
+    move.w  #CMD_READ,IO_COMMAND(%a2)
+    move.l  #512,IO_LENGTH(%a2)
+    move.l  %a0,IO_DATA(%a2)
+    move.l  %d4,IO_OFFSET(%a2)
+    bsr     stage0_doio
+    tst.l   %d0
+    bne.s   stage0_fail
+
+    add.l   #512,%d4
+    move.l  %d5,%d2
+    cmpi.l  #512,%d2
+    bls.s   2f
+    move.l  #512,%d2
+2:
+    move.l  %a0,%a3
+    bsr     stage0_copy_bytes
+    sub.l   %d2,%d5
+    bne.s   stage0_read_loop
+
+stage0_verify:
+    cmp.l   %d7,%d3
+    bne.s   stage0_fail
+
+    /* Firmware/Exec dependency ends here. */
+    move.l  #LOAD_ADDRESS,%a0
+    jmp     (%a0)
 
 stage0_fail:
     moveq   #-1,%d0
+    rts
+
+/* Return D0=0 on success, -1 on I/O error. Preserves our A2 request pointer. */
+stage0_doio:
+    move.l  %a2,%a1
+    jsr     _LVODoIO(%a6)
+    tst.b   IO_ERROR(%a2)
+    bne.s   3f
+    moveq   #0,%d0
+    rts
+3:
+    moveq   #-1,%d0
+    rts
+
+/*
+ * Copy D2 bytes A3 -> A4 and accumulate unsigned byte values in D3.
+ * D2 is preserved so the caller can update its remaining byte count.
+ */
+stage0_copy_bytes:
+    move.l  %d2,%d1
+    beq.s   5f
+4:
+    moveq   #0,%d0
+    move.b  (%a3)+,%d0
+    move.b  %d0,(%a4)+
+    add.l   %d0,%d3
+    subq.l  #1,%d1
+    bne.s   4b
+5:
     rts
 
     .bss
