@@ -18,6 +18,9 @@
 #define AMIGA_INTREQ  AMIGA_REG16(0x09C)
 #define AMIGA_COLOR00 AMIGA_REG16(0x180)
 
+/* CIA-A parallel port data register: useful as a machine-visible oracle. */
+#define AMIGA_CIAA_PRA (*(volatile ax_u8 *)0x00BFE001u)
+
 /* Deterministic native proof-of-life colours for emulator/hardware tests. */
 #define AMIGA_COLOR_BOOTING 0x0002u
 #define AMIGA_COLOR_KERNEL  0x00F0u
