@@ -25,6 +25,8 @@ jobs:
           test -s build/m68k-amiga/axiomicaos-amiga.bin
           test -s build/m68k-amiga/axiomicaos-amiga.axam
           python3 tools/amiga/checkboot.py build/m68k-amiga/axiomicaos-amiga.axam
+          test "$(stat -c%s build/m68k-amiga/axiomicaos-amiga.adf)" -eq 901120
+          python3 tools/amiga/checkadf.py build/m68k-amiga/axiomicaos-amiga.adf
 
       - name: Reject hosted runtime dependencies
         run: |
