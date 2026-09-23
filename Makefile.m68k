@@ -14,17 +14,30 @@ M68K_BIN := $(M68K_BUILD)/axiomicaos-amiga.bin
 M68K_BOOT := $(M68K_BUILD)/axiomicaos-amiga.axam
 M68K_ADF := $(M68K_BUILD)/axiomicaos-amiga.adf
 M68K_STAGE0 := $(M68K_BUILD)/stage0.o
+M68K_STAGE0_ELF := $(M68K_BUILD)/stage0.elf
+M68K_STAGE0_BIN := $(M68K_BUILD)/stage0.bin
+M68K_BOOTBLOCK := $(M68K_BUILD)/bootblock.bin
 M68K_OBJECTS := $(M68K_BUILD)/boot.o $(M68K_BUILD)/main.o $(M68K_BUILD)/cpu.o $(M68K_BUILD)/vectors.o $(M68K_BUILD)/platform.o
 
 .PHONY: m68k-amiga m68k-clean
 
-m68k-amiga: $(M68K_STAGE0) $(M68K_ADF)
+m68k-amiga: $(M68K_BOOTBLOCK) $(M68K_ADF)
 
 $(M68K_BUILD):
 	mkdir -p $(M68K_BUILD)
 
 $(M68K_STAGE0): machines/amiga/stage0.S | $(M68K_BUILD)
 	$(M68K_AS) -m68000 -c $< -o $@
+
+$(M68K_STAGE0_ELF): $(M68K_STAGE0) machines/amiga/stage0.ld
+	$(M68K_LD) -nostdlib -T machines/amiga/stage0.ld -o $@ $(M68K_STAGE0)
+
+$(M68K_STAGE0_BIN): $(M68K_STAGE0_ELF)
+	$(M68K_OBJCOPY) -O binary $< $@
+
+$(M68K_BOOTBLOCK): $(M68K_STAGE0_BIN) tools/amiga/mkbootblock.py tools/amiga/checkbootblock.py
+	python3 tools/amiga/mkbootblock.py $(M68K_STAGE0_BIN) $@
+	python3 tools/amiga/checkbootblock.py $@
 
 $(M68K_BUILD)/boot.o: machines/amiga/boot.S | $(M68K_BUILD)
 	$(M68K_AS) -m68000 -c $< -o $@
@@ -52,7 +65,7 @@ $(M68K_BOOT): $(M68K_BIN) tools/amiga/mkboot.py
 	python3 tools/amiga/checkboot.py $@
 
 $(M68K_ADF): $(M68K_BOOT) tools/amiga/mkadf.py tools/amiga/checkadf.py
-	python3 tools/amiga/mkadf.py $(M68K_BOOT) $@
+	python3 tools/amiga/mkadf.py $(M68K_BOOT) $@ --bootblock $(M68K_BOOTBLOCK)
 	python3 tools/amiga/checkadf.py $@
 
 m68k-clean:
