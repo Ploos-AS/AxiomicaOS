@@ -1,0 +1,26 @@
+#!/bin/sh
+# Launch stock FS-UAE with debugger stdin/stdout attached to named FIFOs.
+# Activation of Mod+D is still external; once activated, commands are fed via stdin.
+set -eu
+ADF=${1:-build/m68k-amiga/axiomicaos-amiga.adf}
+ROM=${AXIOMICA_KICKSTART_ROM:-}
+OUT=${2:-build/m68k-amiga/fsuae-debug.txt}
+[ -f "$ADF" ] || { echo "missing ADF: $ADF" >&2; exit 2; }
+[ -n "$ROM" ] && [ -f "$ROM" ] || { echo "set AXIOMICA_KICKSTART_ROM" >&2; exit 3; }
+command -v fs-uae >/dev/null 2>&1 || { echo "fs-uae not found" >&2; exit 4; }
+TMP=$(mktemp -d); trap 'rm -rf "$TMP"' EXIT INT TERM
+sed "s|@AXIOMICA_ADF@|$ADF|" tools/amiga/fs-uae.conf > "$TMP/run.conf"
+printf '\nkickstart_file = %s\n' "$ROM" >> "$TMP/run.conf"
+mkfifo "$TMP/in"
+# Keep FIFO writer open so FS-UAE does not see EOF before debugger activation.
+exec 3>"$TMP/in" &
+WRITER=$!
+fs-uae --stdout "$TMP/run.conf" <"$TMP/in" >"$OUT" 2>&1 &
+PID=$!
+echo "FS-UAE pid=$PID; activate console debugger with Mod+D."
+sleep "${AXIOMICA_DEBUG_DELAY:-8}"
+printf 'm bfe001 1\nm dff180 1\nq\n' >&3 || true
+wait "$PID" || true
+kill "$WRITER" 2>/dev/null || true
+python3 tools/amiga/fsuae-debugger-adapter.py "$OUT" "${OUT%.txt}.trace"
+sh tools/amiga/adapter-common.sh "${OUT%.txt}.trace" fs-uae
