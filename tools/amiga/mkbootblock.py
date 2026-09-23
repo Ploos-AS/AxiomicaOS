@@ -30,6 +30,10 @@ def main() -> None:
     block[0:4] = b"DOS\0"
     # checksum at 4..7 is zero while calculated; root block remains zero.
     block[CODE_OFFSET:CODE_OFFSET + len(code)] = code
+    # Executable stage-0 must begin exactly where the ROM boot convention
+    # transfers control after the 12-byte DOS/checksum/root header.
+    if not code:
+        raise SystemExit("empty stage-0")
     struct.pack_into(">I", block, 4, amiga_checksum(block))
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_bytes(block)
