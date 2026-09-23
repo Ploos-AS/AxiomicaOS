@@ -23,6 +23,8 @@ jobs:
           file build/m68k-amiga/axiomicaos-amiga.elf
           m68k-linux-gnu-readelf -h build/m68k-amiga/axiomicaos-amiga.elf
           test -s build/m68k-amiga/axiomicaos-amiga.bin
+          test -s build/m68k-amiga/axiomicaos-amiga.axam
+          python3 tools/amiga/checkboot.py build/m68k-amiga/axiomicaos-amiga.axam
 
       - name: Reject hosted runtime dependencies
         run: |
