@@ -13,14 +13,18 @@ M68K_ELF := $(M68K_BUILD)/axiomicaos-amiga.elf
 M68K_BIN := $(M68K_BUILD)/axiomicaos-amiga.bin
 M68K_BOOT := $(M68K_BUILD)/axiomicaos-amiga.axam
 M68K_ADF := $(M68K_BUILD)/axiomicaos-amiga.adf
+M68K_STAGE0 := $(M68K_BUILD)/stage0.o
 M68K_OBJECTS := $(M68K_BUILD)/boot.o $(M68K_BUILD)/main.o $(M68K_BUILD)/cpu.o $(M68K_BUILD)/vectors.o $(M68K_BUILD)/platform.o
 
 .PHONY: m68k-amiga m68k-clean
 
-m68k-amiga: $(M68K_ADF)
+m68k-amiga: $(M68K_STAGE0) $(M68K_ADF)
 
 $(M68K_BUILD):
 	mkdir -p $(M68K_BUILD)
+
+$(M68K_STAGE0): machines/amiga/stage0.S | $(M68K_BUILD)
+	$(M68K_AS) -m68000 -c $< -o $@
 
 $(M68K_BUILD)/boot.o: machines/amiga/boot.S | $(M68K_BUILD)
 	$(M68K_AS) -m68000 -c $< -o $@
