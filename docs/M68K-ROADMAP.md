@@ -104,3 +104,9 @@ Native APIs must be namespaced and capability-discoverable so applications can p
 A platform is not considered supported merely because it compiles. Each supported machine profile should eventually have reproducible emulator and/or real-hardware boot qualification.
 
 The runtime infrastructure for Amiga, Atari and future Macintosh/m68k targets should be reused where practical.
+
+## Bring-up status
+
+- **M0.1:** architecture/machine separation established.
+- **M0.2:** common m68k types/capabilities and bare-metal Amiga BSP scaffold established.
+- Next: cross-build qualification, native Amiga early debug output, deterministic boot image and emulator boot qualification.
