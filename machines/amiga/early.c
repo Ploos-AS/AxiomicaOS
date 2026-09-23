@@ -18,6 +18,7 @@ void platform_early_init(void)
 
     /* Visible proof of native custom-chip access: dark blue background. */
     AMIGA_COLOR00 = AMIGA_COLOR_KERNEL;
+    AMIGA_CIAA_PRA = 0xA5u;
 }
 
 void platform_console_write(const char *text)
@@ -32,6 +33,7 @@ void platform_console_write(const char *text)
 void platform_halt(void)
 {
     AMIGA_COLOR00 = AMIGA_COLOR_HALTED;
+    AMIGA_CIAA_PRA = 0x5Au;
     for (;;) {
         __asm__ volatile ("nop");
     }
