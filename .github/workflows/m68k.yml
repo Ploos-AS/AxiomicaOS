@@ -32,6 +32,7 @@ jobs:
           python3 tools/amiga/checkadf.py build/m68k-amiga/axiomicaos-amiga.adf
           python3 tools/amiga/checkbootblock.py build/m68k-amiga/bootblock.bin
           cmp -n 1024 build/m68k-amiga/bootblock.bin build/m68k-amiga/axiomicaos-amiga.adf
+          python3 tools/amiga/qualify-static.py build/m68k-amiga/axiomicaos-amiga.adf
 
       - name: Publish Amiga bring-up images
         uses: actions/upload-artifact@v4
