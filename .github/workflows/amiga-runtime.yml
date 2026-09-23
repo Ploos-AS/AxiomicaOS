@@ -1,0 +1,53 @@
+name: Amiga runtime qualification
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'arch/m68k/**'
+      - 'machines/amiga/**'
+      - 'kernel/**'
+      - 'include/**'
+      - 'tools/amiga/**'
+      - 'Makefile.m68k'
+      - 'linker-amiga.ld'
+      - '.github/workflows/amiga-runtime.yml'
+
+jobs:
+  fsuae:
+    # This label denotes a controlled runner with FS-UAE and a legal local ROM.
+    runs-on: [self-hosted, linux, x64, axiomica-amiga-runtime]
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check runtime host
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${AXIOMICA_KICKSTART_ROM:-}"
+          test -f "$AXIOMICA_KICKSTART_ROM"
+          command -v fs-uae
+          command -v Xvfb
+          command -v xdotool
+
+      - name: Build exact qualification image
+        run: make -f Makefile.m68k m68k-amiga
+
+      - name: Static qualification
+        run: python3 tools/amiga/qualify-static.py build/m68k-amiga/axiomicaos-amiga.adf
+
+      - name: FS-UAE runtime qualification
+        run: tools/amiga/qualify-fsuae-xvfb.sh build/m68k-amiga/axiomicaos-amiga.adf
+
+      - name: Publish evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: amiga-runtime-evidence
+          path: |
+            build/m68k-amiga/*.trace
+            build/m68k-amiga/*.verified
+            build/m68k-amiga/qualification.json
+          if-no-files-found: warn
