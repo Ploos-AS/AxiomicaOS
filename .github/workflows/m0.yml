@@ -25,7 +25,7 @@ jobs:
         run: |
           set -o pipefail
           timeout 5s qemu-system-i386 -cdrom build/axiomicaos.iso -serial stdio -display none -no-reboot -no-shutdown 2>&1 | tee qemu.log || test $? -eq 124
-          grep -F "AxiomicaOS M0" qemu.log
-          grep -F "Kernel foundation online." qemu.log
+          grep -F "AxiomicaOS M0.1" qemu.log
+          grep -F "Architecture-independent kernel entry online." qemu.log
           grep -F "Multiboot2 magic: valid" qemu.log
-          grep -F "Built from first principles." qemu.log
+          grep -F "Same OS, native hardware personality." qemu.log
