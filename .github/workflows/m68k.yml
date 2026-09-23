@@ -22,6 +22,7 @@ jobs:
         run: |
           file build/m68k-amiga/stage0.o
           m68k-linux-gnu-objdump -d build/m68k-amiga/stage0.o > build/m68k-amiga/stage0.dis
+            build/m68k-amiga/qualification.json
           grep -F "axiomica_amiga_stage0" build/m68k-amiga/stage0.dis
           file build/m68k-amiga/axiomicaos-amiga.elf
           m68k-linux-gnu-readelf -h build/m68k-amiga/axiomicaos-amiga.elf
@@ -33,6 +34,7 @@ jobs:
           python3 tools/amiga/checkbootblock.py build/m68k-amiga/bootblock.bin
           cmp -n 1024 build/m68k-amiga/bootblock.bin build/m68k-amiga/axiomicaos-amiga.adf
           python3 tools/amiga/qualify-static.py build/m68k-amiga/axiomicaos-amiga.adf
+          python3 tools/amiga/qualification-result.py --static --emulator not-run > build/m68k-amiga/qualification.json
 
       - name: Publish Amiga bring-up images
         uses: actions/upload-artifact@v4
