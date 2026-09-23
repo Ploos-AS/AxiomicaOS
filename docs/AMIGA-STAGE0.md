@@ -21,3 +21,9 @@ The kernel remains freestanding and has no Exec, trackdisk or AmigaOS ABI depend
 ## Next qualification gate
 
 Stage-0 becomes boot-capable only after it can read the complete AXAM payload, validate its checksum, place the raw kernel at 0x00100000 and jump to the kernel entry point. Until then, generated ADF files remain development images rather than claimed bootable releases.
+
+## Payload transfer implemented
+
+Stage-0 now copies the initial payload bytes from the AXAM header sector, reads all following sectors through the boot I/O request, computes the AXAM additive checksum while copying, rejects a mismatch, and jumps to the requested 0x00100000 entry address only after successful validation.
+
+The remaining M0.3 work is to encode stage-0 as the actual Amiga boot block with a valid boot-block checksum and integrate it into the generated ADF. Only after emulator qualification will the ADF be marked bootable/supported.
