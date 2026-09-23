@@ -18,4 +18,9 @@
 #define AMIGA_INTREQ  AMIGA_REG16(0x09C)
 #define AMIGA_COLOR00 AMIGA_REG16(0x180)
 
+/* Deterministic native proof-of-life colours for emulator/hardware tests. */
+#define AMIGA_COLOR_BOOTING 0x0002u
+#define AMIGA_COLOR_KERNEL  0x00F0u
+#define AMIGA_COLOR_HALTED  0x000Fu
+
 #endif
