@@ -24,6 +24,8 @@
 .set MAX_PAYLOAD,      0x000C0000
 
 axiomica_amiga_stage0:
+    /* Native visual marker: stage-0 has gained control. */
+    move.w  #0x0002,0x00dff180
     move.l  %a1,%a2
     lea     stage0_sector_buffer,%a0
 
@@ -100,6 +102,8 @@ stage0_verify:
     jmp     (%a0)
 
 stage0_fail:
+    /* Red makes loader failure distinguishable from kernel entry. */
+    move.w  #0x0f00,0x00dff180
     moveq   #-1,%d0
     rts
 
