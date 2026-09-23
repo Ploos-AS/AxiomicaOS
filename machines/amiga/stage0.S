@@ -24,6 +24,10 @@
 .set MAX_PAYLOAD,      0x000C0000
 
 axiomica_amiga_stage0:
+    /*
+     * Amiga boot-block ABI enters executable code at byte 12 of the
+     * 1024-byte block. A6 carries SysBase and A1 the boot I/O request.
+     */
     /* Native visual marker: stage-0 has gained control. */
     move.w  #0x0002,0x00dff180
     move.l  %a1,%a2
