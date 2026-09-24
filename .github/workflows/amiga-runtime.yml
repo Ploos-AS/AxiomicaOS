@@ -28,9 +28,7 @@ jobs:
           set -euo pipefail
           test -n "${AXIOMICA_KICKSTART_ROM:-}"
           test -f "$AXIOMICA_KICKSTART_ROM"
-          command -v fs-uae
-          command -v Xvfb
-          command -v xdotool
+          tools/amiga/check-runtime-host.sh
 
       - name: Build exact qualification image
         run: make -f Makefile.m68k m68k-amiga
