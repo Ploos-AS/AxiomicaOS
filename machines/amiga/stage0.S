@@ -65,7 +65,8 @@ axiomica_amiga_stage0:
 
     /* Exact allocation: prefix + payload + reserved bootstrap stack. */
     move.l  %d6,%d0
-    add.l   #STACK_SIZE+4,%d0
+    add.l   #STACK_SIZE+7,%d0       /* prefix + up to 3 bytes alignment */
+    andi.l  #0xfffffffc,%d0
     move.l  %d0,%d5                 /* allocation size, preserved register */
     move.l  #MEMF_ANY,%d1
     jsr     _LVOAllocMem(%a6)
