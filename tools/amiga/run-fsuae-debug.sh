@@ -12,15 +12,15 @@ TMP=$(mktemp -d); trap 'rm -rf "$TMP"' EXIT INT TERM
 sed "s|@AXIOMICA_ADF@|$ADF|" tools/amiga/fs-uae.conf > "$TMP/run.conf"
 printf '\nkickstart_file = %s\n' "$ROM" >> "$TMP/run.conf"
 mkfifo "$TMP/in"
-# Keep FIFO writer open so FS-UAE does not see EOF before debugger activation.
-exec 3>"$TMP/in" &
-WRITER=$!
+# Open the FIFO read/write in this shell. Opening a write-only FIFO before a
+# reader exists can block forever, which previously made unattended CI hang.
+exec 3<>"$TMP/in"
 fs-uae --stdout "$TMP/run.conf" <"$TMP/in" >"$OUT" 2>&1 &
 PID=$!
 echo "FS-UAE pid=$PID; activate console debugger with Mod+D."
 sleep "${AXIOMICA_DEBUG_DELAY:-8}"
 printf 'm bfe001 1\nm dff180 1\nq\n' >&3 || true
 wait "$PID" || true
-kill "$WRITER" 2>/dev/null || true
+exec 3>&-
 python3 tools/amiga/fsuae-debugger-adapter.py "$OUT" "${OUT%.txt}.trace"
 sh tools/amiga/adapter-common.sh "${OUT%.txt}.trace" fs-uae
