@@ -5,7 +5,7 @@
  * ROM-capable boot stage will establish RAM and stack before entering here.
  */
 
-    .text
+    .section .text.entry,"ax"
     .globl _axiomica_amiga_start
     .extern kmain
 
