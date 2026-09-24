@@ -10,7 +10,8 @@
     .globl axiomica_amiga_stage0
     .type axiomica_amiga_stage0,@function
 
-.set _LVODoIO, -456
+.set _LVODoIO,    -456
+.set _LVOAllocMem, -198
 .set IO_ERROR,   31
 .set IO_COMMAND, 28
 .set IO_LENGTH,  36
@@ -20,15 +21,8 @@
 
 .set AXAM_DISK_OFFSET, 1024
 .set AXAM_HEADER_SIZE, 32
-.set LOAD_ADDRESS,     0x00100000
-.set MAX_PAYLOAD,      0x000C0000
-/* Scratch lives inside the already-reserved kernel destination window.
- * The kernel payload starts at LOAD_ADDRESS; use the first sector-sized
- * slot immediately after the maximum payload range. This removes stage-0
- * BSS entirely. The fixed-address memory policy itself is tracked separately
- * and must be qualified for the declared machine profile.
- */
-.set SECTOR_BUFFER,     LOAD_ADDRESS+MAX_PAYLOAD
+.set MAX_PAYLOAD,      0x00070000
+.set MEMF_ANY,          0
 
 axiomica_amiga_stage0:
     /*
@@ -38,7 +32,18 @@ axiomica_amiga_stage0:
     /* Native visual marker: stage-0 has gained control. */
     move.w  #0x0002,0x00dff180
     move.l  %a1,%a2
-    move.l  #SECTOR_BUFFER,%a0
+    /* Allocate one contiguous block for kernel + 512-byte disk scratch.
+     * Stage-0 must not assume a physical RAM address on classic Amiga.
+     */
+    move.l  #MAX_PAYLOAD+512,%d0
+    move.l  #MEMF_ANY,%d1
+    jsr     _LVOAllocMem(%a6)
+    tst.l   %d0
+    beq     stage0_fail
+    move.l  %d0,%a4                 /* dynamic kernel load address */
+    move.l  %d0,%a5
+    add.l   #MAX_PAYLOAD,%a5        /* sector scratch */
+    move.l  %a5,%a0
 
     /* Read the first AXAM sector. */
     move.w  #CMD_READ,IO_COMMAND(%a2)
@@ -55,8 +60,7 @@ axiomica_amiga_stage0:
     bne     stage0_fail
     cmpi.l  #AXAM_HEADER_SIZE,8(%a0)
     bne     stage0_fail
-    cmpi.l  #LOAD_ADDRESS,12(%a0)
-    bne     stage0_fail
+    /* AXAM v1 load-address field is advisory for this relocatable stage-0. */
 
     move.l  16(%a0),%d6             /* payload bytes */
     beq     stage0_fail
@@ -69,7 +73,6 @@ axiomica_amiga_stage0:
      * bytes, then read following disk sectors into the bounce buffer.
      */
     lea     32(%a0),%a3
-    move.l  #LOAD_ADDRESS,%a4
     move.l  %d6,%d5
     move.l  #AXAM_DISK_OFFSET+512,%d4
     clr.l   %d3                     /* checksum */
@@ -84,7 +87,7 @@ axiomica_amiga_stage0:
     beq.s   stage0_verify
 
 stage0_read_loop:
-    move.l  #SECTOR_BUFFER,%a0
+    move.l  %a5,%a0
     move.w  #CMD_READ,IO_COMMAND(%a2)
     move.l  #512,IO_LENGTH(%a2)
     move.l  %a0,IO_DATA(%a2)
@@ -109,8 +112,8 @@ stage0_verify:
     bne.s   stage0_fail
 
     /* Firmware/Exec dependency ends here. */
-    move.l  #LOAD_ADDRESS,%a0
-    jmp     (%a0)
+    /* Entry is the start of the allocated image. */
+    jmp     (%a4)
 
 stage0_fail:
     /* Red makes loader failure distinguishable from kernel entry. */
