@@ -5,7 +5,7 @@ M68K_LD := $(M68K_PREFIX)ld
 M68K_OBJCOPY := $(M68K_PREFIX)objcopy
 
 M68K_CPPFLAGS := -Iinclude
-M68K_CFLAGS := -m68000 -ffreestanding -fno-pie -fno-stack-protector -Wall -Wextra -Werror -Os
+M68K_CFLAGS := -m68000 -ffreestanding -fPIC -mpcrel -fno-stack-protector -Wall -Wextra -Werror -Os
 M68K_LDFLAGS := -nostdlib -T linker-amiga.ld
 
 M68K_BUILD := build/m68k-amiga
@@ -57,6 +57,7 @@ $(M68K_BUILD)/platform.o: machines/amiga/early.c machines/amiga/hardware.h | $(M
 
 $(M68K_ELF): $(M68K_OBJECTS) linker-amiga.ld
 	$(M68K_LD) $(M68K_LDFLAGS) -o $@ $(M68K_OBJECTS)
+	@! $(M68K_PREFIX)readelf -r $@ | grep -q 'R_68K_32' || { echo "absolute 32-bit relocation in relocatable kernel"; $(M68K_PREFIX)readelf -r $@; exit 1; }
 
 $(M68K_BIN): $(M68K_ELF)
 	$(M68K_OBJCOPY) -O binary $< $@
