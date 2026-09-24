@@ -57,7 +57,7 @@ $(M68K_BUILD)/platform.o: machines/amiga/early.c machines/amiga/hardware.h | $(M
 
 $(M68K_ELF): $(M68K_OBJECTS) linker-amiga.ld
 	$(M68K_LD) $(M68K_LDFLAGS) -o $@ $(M68K_OBJECTS)
-	@! $(M68K_PREFIX)readelf -r $@ | grep -q 'R_68K_32' || { echo "absolute 32-bit relocation in relocatable kernel"; $(M68K_PREFIX)readelf -r $@; exit 1; }
+	python3 tools/amiga/audit-pic.py $@
 
 $(M68K_BIN): $(M68K_ELF)
 	$(M68K_OBJCOPY) -O binary $< $@
