@@ -49,5 +49,5 @@ jobs:
           path: |
             build/m68k-amiga/*.trace
             build/m68k-amiga/*.verified
-            build/m68k-amiga/qualification.json
+            build/m68k-amiga/*.qualification.json
           if-no-files-found: warn
