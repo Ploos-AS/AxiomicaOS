@@ -129,8 +129,8 @@ stage0_verify:
      * Strap frees boot resources and closes trackdisk before invoking A0.
      */
     move.l  %a4,%a0
-    move.l  %a4,%d0
-    add.l   #MAX_PAYLOAD,%d0
+    move.l  %a3,%d0
+    add.l   #MAX_PAYLOAD+4,%d0
     move.l  %d0,-4(%a4)            /* private future stack top */
     moveq   #0,%d0
     rts
