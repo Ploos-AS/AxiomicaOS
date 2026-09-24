@@ -5,7 +5,7 @@ M68K_LD := $(M68K_PREFIX)ld
 M68K_OBJCOPY := $(M68K_PREFIX)objcopy
 
 M68K_CPPFLAGS := -Iinclude
-M68K_CFLAGS := -m68000 -ffreestanding -fPIC -mpcrel -fno-stack-protector -Wall -Wextra -Werror -Os
+M68K_CFLAGS := -m68000 -ffreestanding -mpcrel -fno-stack-protector -Wall -Wextra -Werror -Os
 M68K_LDFLAGS := -nostdlib -T linker-amiga.ld
 
 M68K_BUILD := build/m68k-amiga
