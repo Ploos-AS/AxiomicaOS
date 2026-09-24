@@ -19,4 +19,9 @@ syms=run("nm","-u",str(a.elf)).strip()
 if syms:
     print(syms)
     raise SystemExit("PIC AUDIT FAIL: undefined symbols remain")
-print("M0.3 PIC AUDIT PASS: m68k ELF has no runtime relocations or undefined symbols")
+nm = subprocess.check_output([prefix + "nm", "-n", str(elf)], text=True)
+entry = next((line for line in nm.splitlines() if line.endswith(" _axiomica_amiga_start")), None)
+if entry is None or int(entry.split()[0], 16) != 0:
+    raise SystemExit("_axiomica_amiga_start must be present at image offset zero")
+
+print("M0.3 PIC AUDIT PASS: m68k ELF has no runtime relocations or undefined symbols; entry offset is zero")
