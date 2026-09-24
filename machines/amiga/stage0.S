@@ -112,7 +112,12 @@ stage0_verify:
     bne.s   stage0_fail
 
     /* Firmware/Exec dependency ends here. */
-    /* Entry is the start of the allocated image. */
+    /* Pass the dynamic image allocation to the PIC entry.
+     * A0 = image base, A1 = allocation end (bootstrap stack top).
+     */
+    move.l  %a4,%a0
+    move.l  %a4,%a1
+    add.l   #MAX_PAYLOAD,%a1
     jmp     (%a4)
 
 stage0_fail:
