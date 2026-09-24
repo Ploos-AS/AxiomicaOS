@@ -3,5 +3,7 @@ SECTIONS
 {
     . = 0;
     .text : { *(.text*) *(.rodata*) }
-    /DISCARD/ : { *(.data*) *(.bss*) *(COMMON) *(.comment) *(.note*) }
+    .data : { *(.data*) }
+    .bss (NOLOAD) : { *(.bss*) *(COMMON) }
+    /DISCARD/ : { *(.comment) *(.note*) }
 }
