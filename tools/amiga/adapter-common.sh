@@ -3,5 +3,12 @@
 set -eu
 LOG=$1
 EMU=$2
-python3 tools/amiga/verify-runtime-log.py "$LOG" | tee "${LOG}.verified"
-python3 tools/amiga/qualification-result.py --static --runtime-log "${LOG}.verified" --emulator "$EMU"
+VERIFIED="${LOG}.verified"
+RESULT="${LOG%.*}.qualification.json"
+
+python3 tools/amiga/verify-runtime-log.py "$LOG" | tee "$VERIFIED"
+python3 tools/amiga/qualification-result.py \
+  --static \
+  --runtime-log "$VERIFIED" \
+  --emulator "$EMU" > "$RESULT"
+cat "$RESULT"
