@@ -3,6 +3,7 @@ M68K_CC := $(M68K_PREFIX)gcc
 M68K_AS := $(M68K_PREFIX)gcc
 M68K_LD := $(M68K_PREFIX)ld
 M68K_OBJCOPY := $(M68K_PREFIX)objcopy
+M68K_READELF := $(M68K_PREFIX)readelf
 
 M68K_CPPFLAGS := -Iinclude
 M68K_CFLAGS := -m68000 -ffreestanding -mpcrel -fno-stack-protector -Wall -Wextra -Werror -Os
@@ -33,7 +34,10 @@ $(M68K_STAGE0_ELF): $(M68K_STAGE0) machines/amiga/stage0.ld
 	$(M68K_LD) -nostdlib -T machines/amiga/stage0.ld -o $@ $(M68K_STAGE0)
 
 $(M68K_STAGE0_BIN): $(M68K_STAGE0_ELF)
-	@test -z "$($(M68K_PREFIX)readelf -r $< | grep -E 'R_68K|relocation')" || { echo "stage0 contains unresolved relocations"; $(M68K_PREFIX)readelf -r $<; exit 1; }
+	@if $(M68K_READELF) -rW $< | grep -q 'R_68K_'; then \
+		echo "stage0 contains unresolved relocations"; \
+		$(M68K_READELF) -rW $<; exit 1; \
+	fi
 	$(M68K_OBJCOPY) -O binary $< $@
 
 $(M68K_BOOTBLOCK): $(M68K_STAGE0_BIN) tools/amiga/mkbootblock.py tools/amiga/checkbootblock.py
