@@ -1,11 +1,38 @@
 # Amiga bootstrap handoff ABI
 
-Stage-0 transfers control to the relocatable kernel with:
+M0.3 uses the native Amiga boot-block completion convention rather than jumping
+directly from stage-0 into the kernel.
 
-- A0: base address of the loaded kernel image
-- A1: end of the reserved kernel region, used as the initial downward-growing stack top
-- interrupts disabled
+## Boot-block completion
 
-The kernel entry aligns A1 to four bytes and installs it as SP before calling C code. This removes the previous absolute reference to a 16 KiB BSS stack and keeps the entry path position-independent.
+On successful loading and validation, stage-0 returns to the ROM/strap code with:
 
-This ABI is private to the M0 bootstrap and may be replaced by a structured boot-information block later.
+- `D0 = 0`
+- `A0 = image_base`, which is also `_axiomica_amiga_start`
+- the generated kernel image guarantees that the completion entry is at offset zero
+
+The ROM/strap code may then release its boot resources and close the boot device
+before invoking the completion entry. The kernel therefore does **not** depend on
+the boot-time `A1` I/O-request value surviving the handoff.
+
+## Private bootstrap prefix and stack
+
+The loader allocates one block containing:
+
+1. a 4-byte private prefix,
+2. the exact AXAM payload,
+3. an 8 KiB bootstrap stack.
+
+The private word immediately before the image (`image_base - 4`) contains the
+aligned top of that reserved stack. The completion entry finds its own image base
+PC-relatively, reads this value, installs it as `SP`, disables interrupts, and
+then calls the architecture-independent `kmain`.
+
+The 512-byte trackdisk bounce buffer is a separate `MEMF_CHIP` allocation and
+is released after the payload checksum succeeds, before stage-0 returns success.
+
+## Scope
+
+This is a private M0.3 bootstrap ABI. A later milestone may replace the prefix
+with a versioned boot-information structure, but runtime qualification must first
+prove this minimal contract on the A500/68000 profile.
