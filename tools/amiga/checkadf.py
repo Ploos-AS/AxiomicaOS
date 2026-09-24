@@ -21,7 +21,7 @@ def main() -> None:
             raise SystemExit("bootable ADF does not contain AXAM at byte 1024")
         _, version, header_size, load, size, expected, flags, reserved = struct.unpack(">4s7I", payload[:32])
         body = payload[header_size:header_size + size]
-        if version != 1 or load != 0x00100000 or flags != 0 or reserved != 0:
+        if version != 1 or header_size != 32 or load != 0 or flags != 0 or reserved != 0:
             raise SystemExit("invalid embedded AXAM metadata")
         if (sum(body) & 0xFFFFFFFF) != expected:
             raise SystemExit("embedded AXAM checksum mismatch")
