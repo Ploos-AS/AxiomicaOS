@@ -24,3 +24,4 @@ result={
 }
 print(json.dumps(result,sort_keys=True))
 if not a.static: raise SystemExit(2)
+if a.runtime_log is not None and not runtime: raise SystemExit(3)
