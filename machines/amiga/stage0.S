@@ -40,15 +40,7 @@ axiomica_amiga_stage0:
     /* Kernel may live in any public RAM, but pre-V36 trackdisk requires
      * io_Data in Chip RAM. Keep the DMA bounce sector separate.
      */
-    move.l  #MAX_PAYLOAD+4,%d0
-    move.l  #MEMF_ANY,%d1
-    jsr     _LVOAllocMem(%a6)
-    tst.l   %d0
-    beq     stage0_fail
-    move.l  %d0,%a3                 /* kernel allocation base */
-    move.l  %d0,%a4
-    addq.l  #4,%a4                  /* private handoff prefix */
-
+    /* Read the AXAM header first. Do not reserve MAX_PAYLOAD on a 512K A500. */
     move.l  #512,%d0
     move.l  #MEMF_CHIP,%d1
     jsr     _LVOAllocMem(%a6)
@@ -130,7 +122,7 @@ stage0_verify:
      */
     move.l  %a4,%a0
     move.l  %a3,%d0
-    add.l   #MAX_PAYLOAD+4,%d0
+    add.l   %d7,%d0
     move.l  %d0,-4(%a4)            /* private future stack top */
     moveq   #0,%d0
     rts
@@ -141,7 +133,11 @@ stage0_fail_both:
     jsr     _LVOFreeMem(%a6)
 stage0_fail_kernel:
     move.l  %a3,%a1
-    move.l  #MAX_PAYLOAD+4,%d0
+    move.l  %d7,%d0
+    jsr     _LVOFreeMem(%a6)
+stage0_fail_bounce:
+    move.l  %a5,%a1
+    move.l  #512,%d0
     jsr     _LVOFreeMem(%a6)
 stage0_fail:
     /* Red makes loader failure distinguishable from kernel entry. */
