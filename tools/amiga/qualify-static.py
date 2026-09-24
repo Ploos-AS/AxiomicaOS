@@ -21,7 +21,7 @@ assert folded_sum(d[:1024])==0xffffffff, "boot checksum"
 assert d[1024:1028]==b"AXAM", "AXAM placement"
 _,ver,hsize,load,size,expected,flags,reserved=struct.unpack(">4s7I",d[1024:1056])
 assert ver==1 and hsize==32, "AXAM version/header"
-assert load==0x00100000, "load address"
+assert load==0, "relocatable load metadata"
 assert flags==0 and reserved==0, "reserved metadata"
 body=d[1024+hsize:1024+hsize+size]
 assert len(body)==size and (sum(body)&0xffffffff)==expected, "payload checksum"
