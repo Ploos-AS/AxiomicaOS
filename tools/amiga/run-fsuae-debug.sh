@@ -20,8 +20,11 @@ PID=$!
 echo "FS-UAE pid=$PID; activate console debugger with Mod+D."
 sleep "${AXIOMICA_DEBUG_DELAY:-8}"
 printf 'm bfe001 1\nm dff180 1\nq\n' >&3 || true
-if ! wait "$PID"; then
-  status=$?
+set +e
+wait "$PID"
+status=$?
+set -e
+if [ "$status" -ne 0 ]; then
   exec 3>&-
   echo "FS-UAE exited unsuccessfully: $status" >&2
   exit "$status"
