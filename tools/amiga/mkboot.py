@@ -7,7 +7,7 @@ import struct
 
 MAGIC = b"AXAM"
 VERSION = 1
-LOAD_ADDRESS = 0x00100000
+LOAD_ADDRESS = 0  # AXAM v1: zero means relocatable/bootstrap-selected
 HEADER_SIZE = 32
 
 def checksum(data: bytes) -> int:
