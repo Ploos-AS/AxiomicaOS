@@ -23,7 +23,7 @@ def main() -> None:
         raise SystemExit("invalid AXAM header")
     if size != len(payload) or actual != expected:
         raise SystemExit("payload size/checksum mismatch")
-    if load != 0x00100000 or flags != 0 or reserved != 0:
+    if load != 0 or flags != 0 or reserved != 0:
         raise SystemExit("unexpected bootstrap metadata")
     print(f"AXAM v{version}: {size} bytes, load=0x{load:08x}, checksum=0x{actual:08x}")
 
