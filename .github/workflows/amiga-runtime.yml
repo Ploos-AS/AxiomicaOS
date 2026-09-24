@@ -26,8 +26,6 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test -n "${AXIOMICA_KICKSTART_ROM:-}"
-          test -f "$AXIOMICA_KICKSTART_ROM"
           tools/amiga/check-runtime-host.sh
 
       - name: Build exact qualification image
