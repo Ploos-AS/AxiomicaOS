@@ -17,9 +17,9 @@ _axiomica_amiga_start:
      * Stage-0 stored the future stack-top immediately before this image.
      */
     lea     _axiomica_amiga_start(%pc),%a0
-    move.l  -4(%a0),%a1
-    andi.l  #0xfffffffc,%a1
-    move.l  %a1,%sp
+    move.l  -4(%a0),%d0
+    andi.l  #0xfffffffc,%d0
+    move.l  %d0,%sp
 
     clr.l   -(%sp)
     clr.l   -(%sp)
