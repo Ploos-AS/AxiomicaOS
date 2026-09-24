@@ -22,6 +22,13 @@
 .set AXAM_HEADER_SIZE, 32
 .set LOAD_ADDRESS,     0x00100000
 .set MAX_PAYLOAD,      0x000C0000
+/* Scratch lives inside the already-reserved kernel destination window.
+ * The kernel payload starts at LOAD_ADDRESS; use the first sector-sized
+ * slot immediately after the maximum payload range. This removes stage-0
+ * BSS entirely. The fixed-address memory policy itself is tracked separately
+ * and must be qualified for the declared machine profile.
+ */
+.set SECTOR_BUFFER,     LOAD_ADDRESS+MAX_PAYLOAD
 
 axiomica_amiga_stage0:
     /*
@@ -31,7 +38,7 @@ axiomica_amiga_stage0:
     /* Native visual marker: stage-0 has gained control. */
     move.w  #0x0002,0x00dff180
     move.l  %a1,%a2
-    lea     stage0_sector_buffer,%a0
+    move.l  #SECTOR_BUFFER,%a0
 
     /* Read the first AXAM sector. */
     move.w  #CMD_READ,IO_COMMAND(%a2)
@@ -77,7 +84,7 @@ axiomica_amiga_stage0:
     beq.s   stage0_verify
 
 stage0_read_loop:
-    lea     stage0_sector_buffer,%a0
+    move.l  #SECTOR_BUFFER,%a0
     move.w  #CMD_READ,IO_COMMAND(%a2)
     move.l  #512,IO_LENGTH(%a2)
     move.l  %a0,IO_DATA(%a2)
@@ -140,7 +147,3 @@ stage0_copy_bytes:
 5:
     rts
 
-    .bss
-    .align 4
-stage0_sector_buffer:
-    .space 512
