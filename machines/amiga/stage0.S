@@ -12,6 +12,7 @@
 
 .set _LVODoIO,    -456
 .set _LVOAllocMem, -198
+.set _LVOFreeMem,  -210
 .set IO_ERROR,   31
 .set IO_COMMAND, 28
 .set IO_LENGTH,  36
@@ -44,6 +45,7 @@ axiomica_amiga_stage0:
     jsr     _LVOAllocMem(%a6)
     tst.l   %d0
     beq     stage0_fail
+    move.l  %d0,%a3                 /* kernel allocation base */
     move.l  %d0,%a4
     addq.l  #4,%a4                  /* private handoff prefix */
 
@@ -51,7 +53,7 @@ axiomica_amiga_stage0:
     move.l  #MEMF_CHIP,%d1
     jsr     _LVOAllocMem(%a6)
     tst.l   %d0
-    beq     stage0_fail
+    beq     stage0_fail_kernel
     move.l  %d0,%a5                 /* trackdisk DMA bounce sector */
     move.l  %a5,%a0
 
@@ -62,20 +64,20 @@ axiomica_amiga_stage0:
     move.l  #AXAM_DISK_OFFSET,IO_OFFSET(%a2)
     bsr     stage0_doio
     tst.l   %d0
-    bne     stage0_fail
+    bne     stage0_fail_both
 
     cmpi.l  #0x4158414d,(%a0)       /* AXAM */
-    bne     stage0_fail
+    bne     stage0_fail_both
     cmpi.l  #1,4(%a0)
-    bne     stage0_fail
+    bne     stage0_fail_both
     cmpi.l  #AXAM_HEADER_SIZE,8(%a0)
-    bne     stage0_fail
+    bne     stage0_fail_both
     /* AXAM v1 load-address field is advisory for this relocatable stage-0. */
 
     move.l  16(%a0),%d6             /* payload bytes */
-    beq     stage0_fail
+    beq     stage0_fail_both
     cmpi.l  #MAX_PAYLOAD,%d6
-    bhi     stage0_fail
+    bhi     stage0_fail_both
     move.l  20(%a0),%d7             /* expected additive checksum */
 
     /*
@@ -104,7 +106,7 @@ stage0_read_loop:
     move.l  %d4,IO_OFFSET(%a2)
     bsr     stage0_doio
     tst.l   %d0
-    bne.s   stage0_fail
+    bne.s   stage0_fail_both
 
     add.l   #512,%d4
     move.l  %d5,%d2
@@ -119,7 +121,7 @@ stage0_read_loop:
 
 stage0_verify:
     cmp.l   %d7,%d3
-    bne.s   stage0_fail
+    bne.s   stage0_fail_both
 
     /* Firmware/Exec dependency ends here. */
     /*
@@ -133,6 +135,14 @@ stage0_verify:
     moveq   #0,%d0
     rts
 
+stage0_fail_both:
+    move.l  %a5,%a1
+    move.l  #512,%d0
+    jsr     _LVOFreeMem(%a6)
+stage0_fail_kernel:
+    move.l  %a3,%a1
+    move.l  #MAX_PAYLOAD+4,%d0
+    jsr     _LVOFreeMem(%a6)
 stage0_fail:
     /* Red makes loader failure distinguishable from kernel entry. */
     move.w  #0x0f00,0x00dff180
