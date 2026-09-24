@@ -23,8 +23,10 @@ The loader allocates one block containing:
 2. the exact AXAM payload,
 3. an 8 KiB bootstrap stack.
 
-The private word immediately before the image (`image_base - 4`) contains the
-aligned top of that reserved stack. The completion entry finds its own image base
+The private 32-bit value immediately before the image (`image_base - 4`) contains the
+aligned top of that reserved stack. The complete allocation size is rounded up to
+a 4-byte boundary, so the reserved stack remains fully available even when the
+payload length itself is not naturally aligned. The completion entry finds its own image base
 PC-relatively, reads this value, installs it as `SP`, disables interrupts, and
 then calls the architecture-independent `kmain`.
 
