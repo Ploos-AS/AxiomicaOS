@@ -2,7 +2,7 @@ ENTRY(_axiomica_amiga_start)
 
 SECTIONS
 {
-    . = 0x00100000;
+    . = 0;
 
     .text : ALIGN(4)
     {
