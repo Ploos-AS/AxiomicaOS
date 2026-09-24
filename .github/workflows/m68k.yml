@@ -22,7 +22,6 @@ jobs:
         run: |
           file build/m68k-amiga/stage0.o
           m68k-linux-gnu-objdump -d build/m68k-amiga/stage0.o > build/m68k-amiga/stage0.dis
-            build/m68k-amiga/qualification.json
           grep -F "axiomica_amiga_stage0" build/m68k-amiga/stage0.dis
           file build/m68k-amiga/axiomicaos-amiga.elf
           m68k-linux-gnu-readelf -h build/m68k-amiga/axiomicaos-amiga.elf
