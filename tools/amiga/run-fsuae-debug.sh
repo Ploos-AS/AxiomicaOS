@@ -19,7 +19,12 @@ fs-uae --stdout "$TMP/run.conf" <"$TMP/in" >"$OUT" 2>&1 &
 PID=$!
 echo "FS-UAE pid=$PID; activate console debugger with Mod+D."
 sleep "${AXIOMICA_DEBUG_DELAY:-8}"
-printf 'm bfe001 1\nm dff180 1\nq\n' >&3 || true
+if ! printf 'm bfe001 1\nm dff180 1\nq\n' >&3; then
+  echo "failed to send debugger oracle commands to FS-UAE" >&2
+  kill "$PID" 2>/dev/null || true
+  wait "$PID" 2>/dev/null || true
+  exit 5
+fi
 set +e
 wait "$PID"
 status=$?
