@@ -39,6 +39,14 @@ jobs:
       - name: FS-UAE runtime qualification
         run: tools/amiga/qualify-fsuae-xvfb.sh build/m68k-amiga/axiomicaos-amiga.adf
 
+      - name: Assert runtime evidence exists
+        run: |
+          set -eu
+          test -s build/m68k-amiga/fsuae-debug.trace
+          test -s build/m68k-amiga/fsuae-debug.trace.verified
+          test -s build/m68k-amiga/fsuae-debug.qualification.json
+          grep -q '"runtime_pass": true' build/m68k-amiga/fsuae-debug.qualification.json
+
       - name: Publish evidence
         if: always()
         uses: actions/upload-artifact@v4
