@@ -20,7 +20,12 @@ PID=$!
 echo "FS-UAE pid=$PID; activate console debugger with Mod+D."
 sleep "${AXIOMICA_DEBUG_DELAY:-8}"
 printf 'm bfe001 1\nm dff180 1\nq\n' >&3 || true
-wait "$PID" || true
+if ! wait "$PID"; then
+  status=$?
+  exec 3>&-
+  echo "FS-UAE exited unsuccessfully: $status" >&2
+  exit "$status"
+fi
 exec 3>&-
 python3 tools/amiga/fsuae-debugger-adapter.py "$OUT" "${OUT%.txt}.trace"
 sh tools/amiga/adapter-common.sh "${OUT%.txt}.trace" fs-uae
