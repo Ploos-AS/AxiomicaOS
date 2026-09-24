@@ -91,7 +91,6 @@ axiomica_amiga_stage0:
     bls.s   1f
     move.l  #480,%d2
 1:
-    move.l  %a0,%a3
     bsr     stage0_copy_bytes
     sub.l   %d2,%d1
     move.l  #AXAM_DISK_OFFSET+512,%d4
@@ -112,7 +111,7 @@ stage0_read_loop:
     bls.s   2f
     move.l  #512,%d2
 2:
-    move.l  %a5,%a3
+    move.l  %a5,%a0
     bsr     stage0_copy_bytes
     sub.l   %d2,%d1
     bne.s   stage0_read_loop
@@ -126,17 +125,15 @@ stage0_verify:
     move.l  #512,%d0
     jsr     _LVOFreeMem(%a6)
 
-    /* A4 now points just past payload. Recover entry from allocation base. */
-    move.l  %a4,%a0
-    sub.l   %d6,%a0
+    /* A3 remains the allocation base for the whole load. */
+    move.l  %a3,%a0
+    addq.l  #4,%a0
     moveq   #0,%d0
     rts
 
 stage0_fail_both:
-    /* A4 points into the kernel block, so recover its base from size copied. */
-    move.l  %a4,%a1
-    sub.l   %d6,%a1
-    subq.l  #4,%a1
+    /* A3 is stable even when an I/O error occurs partway through loading. */
+    move.l  %a3,%a1
     move.l  %d5,%d0
     jsr     _LVOFreeMem(%a6)
 stage0_fail_bounce:
@@ -161,7 +158,7 @@ stage0_doio:
     rts
 
 /*
- * Copy D2 bytes A3 -> A4 and accumulate unsigned byte values in D3.
+ * Copy D2 bytes A0 -> A4 and accumulate unsigned byte values in D3.
  * D2 is preserved so the caller can update its remaining byte count.
  */
 stage0_copy_bytes:
@@ -169,7 +166,7 @@ stage0_copy_bytes:
     beq.s   5f
 4:
     moveq   #0,%d0
-    move.b  (%a3)+,%d0
+    move.b  (%a0)+,%d0
     move.b  %d0,(%a4)+
     add.l   %d0,%d3
     subq.l  #1,%d1
