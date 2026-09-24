@@ -35,11 +35,16 @@ if [ $(date +%s) -ge "$deadline" ]; then
   exit 6
 fi
 
-# The child owns canonical parsing/verification and must fail closed.
-if ! timeout "$TIMEOUT" sh -c 'wait "$1"' sh "$EMU_PID" 2>/dev/null; then
-  # POSIX shells cannot wait for a non-child in the timeout shell; poll instead.
-  end=$(( $(date +%s) + TIMEOUT ))
-  while kill -0 "$EMU_PID" 2>/dev/null && [ $(date +%s) -lt "$end" ]; do sleep 1; done
-  kill -0 "$EMU_PID" 2>/dev/null && { echo "runtime timeout" >&2; exit 7; }
+# The emulator is a child of this shell. Poll it with a hard deadline rather
+# than trying to wait from a nested shell, which cannot reap our child.
+end=$(( $(date +%s) + TIMEOUT ))
+while kill -0 "$EMU_PID" 2>/dev/null && [ $(date +%s) -lt "$end" ]; do
+  sleep 1
+done
+if kill -0 "$EMU_PID" 2>/dev/null; then
+  echo "runtime timeout" >&2
+  kill "$EMU_PID" 2>/dev/null || true
+  wait "$EMU_PID" 2>/dev/null || true
+  exit 7
 fi
 wait "$EMU_PID"
