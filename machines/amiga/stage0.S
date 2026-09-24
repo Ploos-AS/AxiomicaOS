@@ -23,6 +23,7 @@
 .set AXAM_HEADER_SIZE, 32
 .set MAX_PAYLOAD,      0x00070000
 .set MEMF_ANY,          0
+.set MEMF_CHIP,         2
 
 axiomica_amiga_stage0:
     /*
@@ -35,15 +36,23 @@ axiomica_amiga_stage0:
     /* Allocate one contiguous block for kernel + 512-byte disk scratch.
      * Stage-0 must not assume a physical RAM address on classic Amiga.
      */
-    move.l  #MAX_PAYLOAD+512+4,%d0
+    /* Kernel may live in any public RAM, but pre-V36 trackdisk requires
+     * io_Data in Chip RAM. Keep the DMA bounce sector separate.
+     */
+    move.l  #MAX_PAYLOAD+4,%d0
     move.l  #MEMF_ANY,%d1
     jsr     _LVOAllocMem(%a6)
     tst.l   %d0
     beq     stage0_fail
     move.l  %d0,%a4
     addq.l  #4,%a4                  /* private handoff prefix */
-    move.l  %a4,%a5
-    add.l   #MAX_PAYLOAD,%a5        /* sector scratch */
+
+    move.l  #512,%d0
+    move.l  #MEMF_CHIP,%d1
+    jsr     _LVOAllocMem(%a6)
+    tst.l   %d0
+    beq     stage0_fail
+    move.l  %d0,%a5                 /* trackdisk DMA bounce sector */
     move.l  %a5,%a0
 
     /* Read the first AXAM sector. */
