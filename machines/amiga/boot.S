@@ -13,11 +13,11 @@ _axiomica_amiga_start:
     move.w  #0x2700,%sr
 
     /*
-     * Stage-0 enters with A0 = base of the allocated image and A1 = end of
-     * its allocation. Use the tail of that allocation as the bootstrap stack;
-     * no absolute/BSS address is required.
+     * Strap invokes this completion entry after freeing boot resources.
+     * Stage-0 stored the future stack-top immediately before this image.
      */
-    move.l  %a1,%sp
+    lea     _axiomica_amiga_start(%pc),%a0
+    move.l  -4(%a0),%sp
     andi.l  #0xfffffffc,%sp
 
     clr.l   -(%sp)
