@@ -16,8 +16,10 @@ def seen(address, value):
     ]
     return any(re.search(x,text) for x in patterns)
 
-kernel=seen("bfe001","a5") or seen("dff180","0f0")
-halt=seen("bfe001","5a") or seen("dff180","00f")
+# Require the machine-readable CIA oracle for both phases. COLOR00 is useful
+# visual corroboration, but it is not sufficient on its own for qualification.
+kernel=seen("bfe001","a5")
+halt=seen("bfe001","5a")
 if not kernel:
     raise SystemExit("RUNTIME FAIL: kernel-entry oracle not observed")
 if not halt:
