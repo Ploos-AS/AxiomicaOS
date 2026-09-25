@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""Verify an emulator/debugger trace against the M0.3 runtime contract."""
-
+"""Verify the ordered M0.3 Amiga runtime oracle sequence."""
 from pathlib import Path
 import argparse, re
 
@@ -9,19 +8,17 @@ p.add_argument("log",type=Path)
 a=p.parse_args()
 text=a.log.read_text(errors="replace")
 
-def seen(address, value):
-    patterns=[
-        rf"(?i){address}.*(?:=|:|\s){value}\b",
-        rf"(?i)0x{address}.*(?:=|:|\s)0x{value}\b",
-    ]
-    return any(re.search(x,text) for x in patterns)
+values=[]
+for m in re.finditer(r"(?im)^\s*bfe001\s*=\s*([0-9a-f]{2})\b", text):
+    values.append(m.group(1).lower())
 
-# Require the machine-readable CIA oracle for both phases. COLOR00 is useful
-# visual corroboration, but it is not sufficient on its own for qualification.
-kernel=seen("bfe001","a5")
-halt=seen("bfe001","5a")
-if not kernel:
-    raise SystemExit("RUNTIME FAIL: kernel-entry oracle not observed")
-if not halt:
-    raise SystemExit("RUNTIME FAIL: halt oracle not observed")
-print("M0.3 RUNTIME PASS: kernel entry and halt oracle observed")
+if "a5" not in values:
+    raise SystemExit("RUNTIME FAIL: kernel-entry oracle 0xA5 not observed")
+try:
+    entry=values.index("a5")
+except ValueError:
+    raise SystemExit("RUNTIME FAIL: kernel-entry oracle missing")
+if "5a" not in values[entry+1:]:
+    raise SystemExit("RUNTIME FAIL: kernel-halt oracle 0x5A not observed after entry")
+
+print("M0.3 RUNTIME PASS: ordered CIA entry 0xA5 -> halt 0x5A observed")
