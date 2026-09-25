@@ -18,23 +18,26 @@ t=a.transcript.read_text(errors="replace")
 # Accept common UAE memory-dump renderings and normalize only our two oracle
 # addresses. Do not infer success from unrelated text.
 wanted={"bfe001":[],"dff180":[]}
-for addr in list(wanted):
+matches=[]
+for addr in wanted:
     pats=[
         rf"(?im)^\s*0*{addr}\b[^\n]*?\b([0-9a-f]{{2,4}})\b",
         rf"(?im)\b0x0*{addr}\b[^\n]*?\b0x([0-9a-f]{{2,4}})\b",
     ]
     for pat in pats:
-        m=re.search(pat,t)
-        if m:
-            wanted[addr].append(m.group(1).lower())
-    # Preserve all samples in transcript order; qualification needs to see
-    # distinct entry and halt states, not merely the first matching dump.
+        for m in re.finditer(pat,t):
+            matches.append((m.start(),addr,m.group(1).lower()))
 
+# De-duplicate alternate regex hits while retaining transcript order.
+seen=set()
 lines=[]
-for value in wanted["bfe001"]:
-    lines.append(f"bfe001 = {value[-2:]}")
-for value in wanted["dff180"]:
-    lines.append(f"dff180 = {value[-3:]}")
+for pos,addr,value in sorted(matches):
+    key=(pos,addr,value)
+    if key in seen:
+        continue
+    seen.add(key)
+    width=2 if addr=="bfe001" else 3
+    lines.append(f"{addr} = {value[-width:]}")
 if not lines:
     raise SystemExit("no Axiomica oracle addresses found in FS-UAE debugger transcript")
 a.output.write_text("\n".join(lines)+"\n")
