@@ -40,6 +40,7 @@ jobs:
       - name: Assert runtime evidence exists
         run: |
           set -eu
+          test -s build/m68k-amiga/fsuae-debug.txt
           test -s build/m68k-amiga/fsuae-debug.trace
           test -s build/m68k-amiga/fsuae-debug.trace.verified
           test -s build/m68k-amiga/fsuae-debug.qualification.json
