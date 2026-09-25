@@ -20,6 +20,7 @@ result={
   "target":"m68k-amiga-a500",
   "static_pass":bool(a.static),
   "runtime_pass":runtime,
+  "qualified":bool(a.static and runtime),
   "emulator":a.emulator,
 }
 print(json.dumps(result,sort_keys=True))
