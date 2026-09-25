@@ -19,6 +19,15 @@ void platform_early_init(void)
     /* Visible proof of native custom-chip access: dark blue background. */
     AMIGA_COLOR00 = AMIGA_COLOR_KERNEL;
     AMIGA_CIAA_PRA = 0xA5u;
+
+    /*
+     * Keep the entry oracle observable long enough for an external emulator
+     * debugger to sample it deterministically. This is an M0.3 qualification
+     * dwell, not a timing dependency of the kernel.
+     */
+    for (volatile ax_u32 dwell = 0; dwell < 250000u; ++dwell) {
+        __asm__ volatile ("nop");
+    }
 }
 
 void platform_console_write(const char *text)
