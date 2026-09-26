@@ -44,7 +44,7 @@ jobs:
           test -s build/m68k-amiga/fsuae-debug.trace
           test -s build/m68k-amiga/fsuae-debug.trace.verified
           test -s build/m68k-amiga/fsuae-debug.qualification.json
-          grep -q '"runtime_pass": true' build/m68k-amiga/fsuae-debug.qualification.json
+          grep -q '"qualified": true' build/m68k-amiga/fsuae-debug.qualification.json
 
       - name: Publish evidence
         if: always()
