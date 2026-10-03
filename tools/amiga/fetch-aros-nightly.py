@@ -52,4 +52,12 @@ archive=a.output/name
 print(f"Fetching official AROS nightly {date} from SourceForge")
 archive.write_bytes(get(url))
 subprocess.run(["7z","x","-y",f"-o{a.output}",str(archive)],check=True)
+
+# The boot ZIP contains the ISO; the ROM payload lives inside that ISO.
+isos=list(a.output.rglob("*.iso"))
+if len(isos) != 1:
+    raise SystemExit(f"expected exactly one AROS boot ISO, found {len(isos)}")
+iso_root=a.output/"iso"
+iso_root.mkdir(exist_ok=True)
+subprocess.run(["7z","x","-y",f"-o{iso_root}",str(isos[0])],check=True)
 print("AROS NIGHTLY READY")
