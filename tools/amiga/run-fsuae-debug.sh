@@ -36,4 +36,4 @@ if [ "$status" -ne 0 ]; then
 fi
 exec 3>&-
 python3 tools/amiga/fsuae-debugger-adapter.py "$OUT" "${OUT%.txt}.trace"
-sh tools/amiga/adapter-common.sh "${OUT%.txt}.trace" fs-uae
+sh tools/amiga/adapter-common.sh "${OUT%.txt}.trace" fs-uae "$ADF"
