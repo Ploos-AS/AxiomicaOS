@@ -45,6 +45,11 @@ while kill -0 "$EMU_PID" 2>/dev/null && [ $(date +%s) -lt "$end" ]; do
 done
 if kill -0 "$EMU_PID" 2>/dev/null; then
   echo "runtime timeout" >&2
+  if [ -f "$OUT" ]; then
+    echo "--- FS-UAE transcript tail ---" >&2
+    tail -n 80 "$OUT" >&2 || true
+    echo "--- end transcript tail ---" >&2
+  fi
   kill "$EMU_PID" 2>/dev/null || true
   wait "$EMU_PID" 2>/dev/null || true
   exit 7
