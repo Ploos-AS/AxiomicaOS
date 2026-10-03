@@ -54,7 +54,7 @@ jobs:
         env:
           AXIOMICA_KICKSTART_ROM: build/aros-nightly/aros-amiga.rom
           AXIOMICA_RUNTIME_FIRMWARE: aros
-        run: tools/amiga/qualify-fsuae-xvfb.sh build/m68k-amiga/axiomicaos-amiga.adf
+        run: sh tools/amiga/qualify-fsuae-xvfb.sh build/m68k-amiga/axiomicaos-amiga.adf
 
       - name: Assert AROS evidence
         run: |
