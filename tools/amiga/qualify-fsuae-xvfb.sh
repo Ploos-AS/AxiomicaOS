@@ -20,13 +20,13 @@ sleep 1
 OUT="build/m68k-amiga/fsuae-debug.txt"
 mkdir -p "$(dirname "$OUT")"
 rm -f "$OUT" "${OUT%.txt}.trace" "${OUT%.txt}.trace.verified" "${OUT%.txt}.qualification.json"
-tools/amiga/run-fsuae-debug.sh "$ADF" "$OUT" &
+sh tools/amiga/run-fsuae-debug.sh "$ADF" "$OUT" &
 EMU_PID=$!
 
 deadline=$(( $(date +%s) + TIMEOUT ))
 while [ $(date +%s) -lt "$deadline" ]; do
   if xdotool search --name "${AXIOMICA_FS_UAE_WINDOW:-FS-UAE}" >/dev/null 2>&1; then
-    tools/amiga/activate-fsuae-debugger-x11.sh && break
+    sh tools/amiga/activate-fsuae-debugger-x11.sh && break
   fi
   kill -0 "$EMU_PID" 2>/dev/null || { echo "FS-UAE exited before debugger activation" >&2; exit 5; }
   sleep 1
