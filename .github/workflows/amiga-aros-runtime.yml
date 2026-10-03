@@ -1,0 +1,79 @@
+name: Amiga AROS hosted runtime
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'arch/m68k/**'
+      - 'machines/amiga/**'
+      - 'kernel/**'
+      - 'include/**'
+      - 'tools/amiga/**'
+      - 'Makefile.m68k'
+      - 'linker-amiga.ld'
+      - '.github/workflows/amiga-aros-runtime.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'arch/m68k/**'
+      - 'machines/amiga/**'
+      - 'kernel/**'
+      - 'include/**'
+      - 'tools/amiga/**'
+      - 'Makefile.m68k'
+      - 'linker-amiga.ld'
+      - '.github/workflows/amiga-aros-runtime.yml'
+
+jobs:
+  fsuae-aros:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install runtime dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y fs-uae xvfb xdotool gcc-m68k-linux-gnu binutils-m68k-linux-gnu curl p7zip-full
+
+      - name: Fetch official AROS m68k nightly
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p build/aros-nightly
+          python3 tools/amiga/fetch-aros-nightly.py build/aros-nightly
+          python3 tools/amiga/find-aros-rom.py build/aros-nightly build/aros-nightly/aros-amiga.rom
+
+      - name: Build exact qualification image
+        run: make -f Makefile.m68k m68k-amiga
+
+      - name: Static qualification
+        run: python3 tools/amiga/qualify-static.py build/m68k-amiga/axiomicaos-amiga.adf
+
+      - name: AROS FS-UAE runtime qualification
+        env:
+          AXIOMICA_KICKSTART_ROM: build/aros-nightly/aros-amiga.rom
+          AXIOMICA_RUNTIME_FIRMWARE: aros
+        run: tools/amiga/qualify-fsuae-xvfb.sh build/m68k-amiga/axiomicaos-amiga.adf
+
+      - name: Assert AROS evidence
+        run: |
+          test -s build/m68k-amiga/fsuae-debug.qualification.json
+          grep -q '"qualified": true' build/m68k-amiga/fsuae-debug.qualification.json
+          grep -q '"firmware": "aros"' build/m68k-amiga/fsuae-debug.qualification.json
+          python3 tools/amiga/verify-release-gate.py \
+            build/m68k-amiga/axiomicaos-amiga.adf \
+            build/m68k-amiga/fsuae-debug.qualification.json \
+            --firmware aros
+
+      - name: Publish AROS runtime evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: amiga-aros-runtime-evidence
+          path: |
+            build/m68k-amiga/fsuae-debug.txt
+            build/m68k-amiga/*.trace
+            build/m68k-amiga/*.verified
+            build/m68k-amiga/*.qualification.json
+          if-no-files-found: warn
