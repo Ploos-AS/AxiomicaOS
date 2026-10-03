@@ -35,6 +35,9 @@ jobs:
           python3 tools/amiga/qualify-static.py build/m68k-amiga/axiomicaos-amiga.adf
           python3 tools/amiga/qualification-result.py --static --emulator not-run > build/m68k-amiga/qualification.json
 
+      - name: Test M0.3 release gate
+        run: python3 tools/amiga/test-release-gate.py
+
       - name: Publish Amiga bring-up images
         uses: actions/upload-artifact@v4
         with:
