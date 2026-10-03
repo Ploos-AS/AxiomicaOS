@@ -5,6 +5,7 @@ set -eu
 ADF=${1:-build/m68k-amiga/axiomicaos-amiga.adf}
 ROM=${AXIOMICA_KICKSTART_ROM:-}
 OUT=${2:-build/m68k-amiga/fsuae-debug.txt}
+FIRMWARE=${AXIOMICA_RUNTIME_FIRMWARE:-kickstart}
 [ -f "$ADF" ] || { echo "missing ADF: $ADF" >&2; exit 2; }
 [ -n "$ROM" ] && [ -f "$ROM" ] || { echo "set AXIOMICA_KICKSTART_ROM" >&2; exit 3; }
 command -v fs-uae >/dev/null 2>&1 || { echo "fs-uae not found" >&2; exit 4; }
@@ -36,4 +37,4 @@ if [ "$status" -ne 0 ]; then
 fi
 exec 3>&-
 python3 tools/amiga/fsuae-debugger-adapter.py "$OUT" "${OUT%.txt}.trace"
-sh tools/amiga/adapter-common.sh "${OUT%.txt}.trace" fs-uae "$ADF"
+sh tools/amiga/adapter-common.sh "${OUT%.txt}.trace" fs-uae "$ADF" "$FIRMWARE"
