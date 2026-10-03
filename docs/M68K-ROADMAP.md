@@ -109,4 +109,8 @@ The runtime infrastructure for Amiga, Atari and future Macintosh/m68k targets sh
 
 - **M0.1:** architecture/machine separation established.
 - **M0.2:** common m68k types/capabilities and bare-metal Amiga BSP scaffold established.
-- Next: cross-build qualification, native Amiga early debug output, deterministic boot image and emulator boot qualification.
+- **M0.3 static gate: PASS.** Cross-build qualification, deterministic native Amiga boot image, AXAM payload, boot-block/ADF validation and static CI qualification are established.
+- **M0.3 runtime gate: PENDING.** The FS-UAE adapter, verifier, unattended Xvfb runner and self-hosted workflow are implemented. Completion requires a dedicated runtime host with a legal local ROM to reach both the kernel-entry and halt oracles and retain the evidence artifact.
+- **M0.3 release:** tag only after both static and runtime gates pass.
+
+After M0.3, the next kernel-development milestone should build on the qualified boot path rather than weaken its evidence requirements.
