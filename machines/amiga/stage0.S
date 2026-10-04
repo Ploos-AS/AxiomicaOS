@@ -31,6 +31,8 @@ axiomica_amiga_stage0:
     bra.s   stage0_entry
     .ascii  "AXBB"
 stage0_entry:
+    /* Persistent low-memory execution breadcrumb for debugger qualification. */
+    move.l  #0x41585330,0x00000100  /* "AXS0" */
     move.w  #0x0002,0x00dff180
     move.l  %a1,%a2
     move.l  IO_OFFSET(%a2),%d4      /* boot partition origin from strap */
