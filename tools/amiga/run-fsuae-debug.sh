@@ -4,6 +4,7 @@
 set -eu
 ADF=${1:-build/m68k-amiga/axiomicaos-amiga.adf}
 ROM=${AXIOMICA_KICKSTART_ROM:-}
+EXT_ROM=${AXIOMICA_KICKSTART_EXT_ROM:-}
 OUT=${2:-build/m68k-amiga/fsuae-debug.txt}
 FIRMWARE=${AXIOMICA_RUNTIME_FIRMWARE:-kickstart}
 [ -f "$ADF" ] || { echo "missing ADF: $ADF" >&2; exit 2; }
@@ -14,6 +15,10 @@ command -v script >/dev/null 2>&1 || { echo "script(1) from util-linux required"
 TMP=$(mktemp -d); trap 'rm -rf "$TMP"' EXIT INT TERM
 sed "s|@AXIOMICA_ADF@|$ADF|" tools/amiga/fs-uae.conf > "$TMP/run.conf"
 printf '\nkickstart_file = %s\n' "$ROM" >> "$TMP/run.conf"
+if [ -n "$EXT_ROM" ]; then
+  [ -f "$EXT_ROM" ] || { echo "missing extended ROM: $EXT_ROM" >&2; exit 3; }
+  printf 'kickstart_ext_file = %s\n' "$EXT_ROM" >> "$TMP/run.conf"
+fi
 mkfifo "$TMP/in"
 exec 3<>"$TMP/in"
 
