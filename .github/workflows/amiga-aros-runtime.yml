@@ -51,6 +51,12 @@ jobs:
           sha256sum build/aros-nightly/reference-bootblock.bin > build/aros-nightly/reference-bootblock.sha256
           od -An -tx1 -v build/aros-nightly/reference-bootblock.bin > build/aros-nightly/reference-bootblock.hex
 
+      - name: Prepare marked AROS boot control
+        run: |
+          python3 tools/amiga/mark-control-bootblock.py \
+            build/aros-nightly/iso/Emergency-Boot.adf \
+            build/aros-nightly/Emergency-Boot-control.adf
+
       - name: Build exact qualification image
         run: make -f Makefile.m68k m68k-amiga
 
@@ -70,7 +76,7 @@ jobs:
           AXIOMICA_KICKSTART_EXT_ROM: build/aros-nightly/aros-amiga-ext.rom
           AXIOMICA_RUNTIME_FIRMWARE: aros
           AXIOMICA_DEBUG_OUT: build/m68k-amiga/aros-control-debug.txt
-        run: sh tools/amiga/qualify-fsuae-xvfb.sh build/aros-nightly/iso/Emergency-Boot.adf || true
+        run: sh tools/amiga/qualify-fsuae-xvfb.sh build/aros-nightly/Emergency-Boot-control.adf || true
 
       - name: AROS FS-UAE runtime qualification
         env:
