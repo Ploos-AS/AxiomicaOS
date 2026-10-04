@@ -31,6 +31,16 @@ if slot is None:
 boot[slot:slot+len(marker)] = marker
 struct.pack_into(">I", boot, 4, 0)
 struct.pack_into(">I", boot, 4, checksum(boot))
+# A valid Amiga boot block sums to all ones with end-around carry.
+total = 0
+for off in range(0, SIZE, 4):
+    value = struct.unpack_from(">I", boot, off)[0]
+    old = total
+    total = (total + value) & 0xffffffff
+    if total < old:
+        total = (total + 1) & 0xffffffff
+if total != 0xffffffff:
+    raise SystemExit(f"invalid repaired boot-block checksum: 0x{total:08x}")
 data[:SIZE] = boot
 args.output.parent.mkdir(parents=True, exist_ok=True)
 args.output.write_bytes(data)
