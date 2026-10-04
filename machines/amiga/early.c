@@ -1,6 +1,11 @@
 #include <axiomica/platform.h>
 #include "hardware.h"
 
+/* Runtime oracle lives inside the relocatable kernel image. */
+volatile struct axiomica_amiga_oracle axiomica_amiga_oracle = {
+    AXIOMICA_AMIGA_ORACLE_MAGIC, 0u, 0u, {0u, 0u, 0u}
+};
+
 /*
  * First bare-metal Amiga BSP scaffold.
  *
@@ -19,6 +24,7 @@ void platform_early_init(void)
     /* Visible proof of native custom-chip access: dark blue background. */
     AMIGA_COLOR00 = AMIGA_COLOR_KERNEL;
     AMIGA_CIAA_PRA = 0xA5u;
+    axiomica_amiga_oracle.state = 0xA5u;
 
     /*
      * Keep the entry oracle observable long enough for an external emulator
@@ -43,6 +49,7 @@ void platform_halt(void)
 {
     AMIGA_COLOR00 = AMIGA_COLOR_HALTED;
     AMIGA_CIAA_PRA = 0x5Au;
+    axiomica_amiga_oracle.state = 0x5Au;
     for (;;) {
         __asm__ volatile ("nop");
     }
