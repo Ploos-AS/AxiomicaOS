@@ -44,6 +44,7 @@ jobs:
           python3 tools/amiga/fetch-aros-nightly.py build/aros-nightly
           python3 tools/amiga/find-aros-rom.py build/aros-nightly build/aros-nightly/aros-amiga.rom build/aros-nightly/aros-amiga-ext.rom
           python3 tools/amiga/inventory-aros-boot-media.py build/aros-nightly build/aros-nightly/boot-media-inventory.txt
+          python3 tools/amiga/inventory-aros-boot-media.py build/aros-nightly/boot-floppy build/aros-nightly/boot-floppy-inventory.txt
 
       - name: Build exact qualification image
         run: make -f Makefile.m68k m68k-amiga
@@ -87,4 +88,5 @@ jobs:
             build/m68k-amiga/*.qualification.json
             build/m68k-amiga/adf-structure.txt
             build/aros-nightly/boot-media-inventory.txt
+            build/aros-nightly/boot-floppy-inventory.txt
           if-no-files-found: warn
