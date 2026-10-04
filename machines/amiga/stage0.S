@@ -32,9 +32,9 @@ axiomica_amiga_stage0:
     move.l  %a1,%a2
 
     /* Do not depend on firmware preserving ExecBase in A6 for boot code. */
-    move.l  4.w,%a6
-    tst.l   %a6
+    move.l  4.w,%d0
     beq     stage0_fail
+    move.l  %d0,%a6
 
     /* Pre-V36 trackdisk DMA buffer must be Chip RAM. */
     move.l  #512,%d0
