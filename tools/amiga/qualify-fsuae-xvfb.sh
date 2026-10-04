@@ -17,7 +17,7 @@ Xvfb "$DISPLAY" -screen 0 1024x768x24 >"$TMP/xvfb.log" 2>&1 &
 XVFB_PID=$!
 sleep 1
 
-OUT="build/m68k-amiga/fsuae-debug.txt"
+OUT=${AXIOMICA_DEBUG_OUT:-build/m68k-amiga/fsuae-debug.txt}
 mkdir -p "$(dirname "$OUT")"
 rm -f "$OUT" "${OUT%.txt}.trace" "${OUT%.txt}.trace.verified" "${OUT%.txt}.qualification.json"
 DEBUG_READY="$TMP/debugger.ready"
