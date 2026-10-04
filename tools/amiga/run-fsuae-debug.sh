@@ -28,7 +28,14 @@ script -qefc "fs-uae --stdout '$TMP/run.conf'" "$OUT" <"$TMP/in" >/dev/null 2>&1
 PID=$!
 echo "FS-UAE PTY pid=$PID; activate console debugger action."
 
-sleep "${AXIOMICA_DEBUG_DELAY:-12}"
+if [ -n "${AXIOMICA_DEBUG_READY_FILE:-}" ]; then
+  while [ ! -f "$AXIOMICA_DEBUG_READY_FILE" ]; do
+    kill -0 "$PID" 2>/dev/null || break
+    sleep 0.1
+  done
+else
+  sleep "${AXIOMICA_DEBUG_DELAY:-12}"
+fi
 if ! printf 'r\ndm\ns "AXBB" 000000 1000000\ns "AXOR" 000000 1000000\nq\n' >&3; then
   echo "failed to send debugger RAM-oracle discovery commands to FS-UAE PTY" >&2
   kill "$PID" 2>/dev/null || true
