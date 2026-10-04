@@ -28,6 +28,9 @@
 .set STACK_SIZE,         8192
 
 axiomica_amiga_stage0:
+    bra.s   stage0_entry
+    .ascii  "AXBB"
+stage0_entry:
     move.w  #0x0002,0x00dff180
     move.l  %a1,%a2
     move.l  IO_OFFSET(%a2),%d4      /* boot partition origin from strap */
