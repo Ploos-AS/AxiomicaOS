@@ -70,6 +70,18 @@ jobs:
       - name: Static qualification
         run: python3 tools/amiga/qualify-static.py build/m68k-amiga/axiomicaos-amiga.adf
 
+      - name: ROM-only control image
+        run: |
+          dd if=/dev/zero of=build/aros-nightly/rom-only.adf bs=901120 count=1 status=none
+
+      - name: ROM-only control
+        env:
+          AXIOMICA_KICKSTART_ROM: build/aros-nightly/aros-amiga.rom
+          AXIOMICA_KICKSTART_EXT_ROM: build/aros-nightly/aros-amiga-ext.rom
+          AXIOMICA_RUNTIME_FIRMWARE: aros
+          AXIOMICA_DEBUG_OUT: build/m68k-amiga/rom-only-debug.txt
+        run: sh tools/amiga/qualify-fsuae-xvfb.sh build/aros-nightly/rom-only.adf || true
+
       - name: AROS reference floppy control
         env:
           AXIOMICA_KICKSTART_ROM: build/aros-nightly/aros-amiga.rom
@@ -103,6 +115,7 @@ jobs:
           path: |
             build/m68k-amiga/fsuae-debug.txt
             build/m68k-amiga/aros-control-debug.txt
+            build/m68k-amiga/rom-only-debug.txt
             build/m68k-amiga/*.trace
             build/m68k-amiga/*.verified
             build/m68k-amiga/*.qualification.json
