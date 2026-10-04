@@ -18,6 +18,12 @@ def main() -> None:
         root_block = struct.unpack_from(">I", data, 8)[0]
         if root_block != 880:
             raise SystemExit(f"invalid DD root-block pointer: {root_block}, expected 880")
+        root = data[root_block * 512:(root_block + 1) * 512]
+        root_words = struct.unpack(">128I", root)
+        if root_words[0] != 2 or root_words[-1] != 1:
+            raise SystemExit("invalid OFS root-block type")
+        if sum(root_words) & 0xFFFFFFFF:
+            raise SystemExit("invalid OFS root-block checksum")
         offset = 1024
         payload = data[offset:]
         if payload[:4] != b"AXAM":
