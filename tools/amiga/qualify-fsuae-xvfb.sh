@@ -26,7 +26,10 @@ EMU_PID=$!
 deadline=$(( $(date +%s) + TIMEOUT ))
 while [ $(date +%s) -lt "$deadline" ]; do
   if xdotool search --name "${AXIOMICA_FS_UAE_WINDOW:-FS-UAE}" >/dev/null 2>&1; then
-    sh tools/amiga/activate-fsuae-debugger-x11.sh && break
+    sh tools/amiga/activate-fsuae-debugger-x11.sh
+    # Give FS-UAE time to enter its console debugger before the PTY sends commands.
+    sleep "${AXIOMICA_DEBUGGER_SETTLE:-3}"
+    break
   fi
   kill -0 "$EMU_PID" 2>/dev/null || { echo "FS-UAE exited before debugger activation" >&2; exit 5; }
   sleep 1
