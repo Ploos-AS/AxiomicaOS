@@ -58,6 +58,14 @@ jobs:
       - name: Static qualification
         run: python3 tools/amiga/qualify-static.py build/m68k-amiga/axiomicaos-amiga.adf
 
+      - name: AROS reference floppy control
+        env:
+          AXIOMICA_KICKSTART_ROM: build/aros-nightly/aros-amiga.rom
+          AXIOMICA_KICKSTART_EXT_ROM: build/aros-nightly/aros-amiga-ext.rom
+          AXIOMICA_RUNTIME_FIRMWARE: aros
+          AXIOMICA_DEBUG_OUT: build/m68k-amiga/aros-control-debug.txt
+        run: sh tools/amiga/qualify-fsuae-xvfb.sh build/aros-nightly/iso/Emergency-Boot.adf || true
+
       - name: AROS FS-UAE runtime qualification
         env:
           AXIOMICA_KICKSTART_ROM: build/aros-nightly/aros-amiga.rom
@@ -82,6 +90,7 @@ jobs:
           name: amiga-aros-runtime-evidence
           path: |
             build/m68k-amiga/fsuae-debug.txt
+            build/m68k-amiga/aros-control-debug.txt
             build/m68k-amiga/*.trace
             build/m68k-amiga/*.verified
             build/m68k-amiga/*.qualification.json
