@@ -39,28 +39,20 @@ chosen=None
 for date in dates[:14]:
     directory=urljoin(FILES,f"{date}/Binaries/")
     page=get(directory).decode("utf-8","replace")
-    iso_name=f"AROS-{date}-amiga-m68k-boot-iso.zip"
-    floppy_name=f"AROS-{date}-amiga-m68k-boot-floppy.zip"
-    if iso_name in page and floppy_name in page:
-        chosen=(date,directory,iso_name,floppy_name)
+    name=f"AROS-{date}-amiga-m68k-boot-iso.zip"
+    if name in page:
+        chosen=(date,directory,name)
         break
 if chosen is None:
     raise SystemExit("no recent official amiga-m68k boot ISO nightly found")
 
-date,directory,name,floppy_name=chosen
+date,directory,name=chosen
 url=urljoin(directory,name+"/download")
 archive=a.output/name
 print(f"Fetching official AROS nightly {date} from SourceForge")
 archive.write_bytes(get(url))
 subprocess.run(["7z","x","-y",f"-o{a.output}",str(archive)],check=True)
 
-floppy_url=urljoin(directory,floppy_name+"/download")
-floppy_archive=a.output/floppy_name
-print(f"Fetching official AROS boot floppy {date} from SourceForge")
-floppy_archive.write_bytes(get(floppy_url))
-floppy_root=a.output/"boot-floppy"
-floppy_root.mkdir(exist_ok=True)
-subprocess.run(["7z","x","-y",f"-o{floppy_root}",str(floppy_archive)],check=True)
 
 # The boot ZIP contains the ISO; the ROM payload lives inside that ISO.
 isos=list(a.output.rglob("*.iso"))
