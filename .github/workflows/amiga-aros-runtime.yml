@@ -48,6 +48,13 @@ jobs:
       - name: Build exact qualification image
         run: make -f Makefile.m68k m68k-amiga
 
+      - name: Compare ADF structure with AROS reference
+        run: |
+          python3 tools/amiga/compare-adf-structure.py \
+            build/aros-nightly/iso/Emergency-Boot.adf \
+            build/m68k-amiga/axiomicaos-amiga.adf \
+            build/m68k-amiga/adf-structure.txt
+
       - name: Static qualification
         run: python3 tools/amiga/qualify-static.py build/m68k-amiga/axiomicaos-amiga.adf
 
@@ -78,5 +85,6 @@ jobs:
             build/m68k-amiga/*.trace
             build/m68k-amiga/*.verified
             build/m68k-amiga/*.qualification.json
+            build/m68k-amiga/adf-structure.txt
             build/aros-nightly/boot-media-inventory.txt
           if-no-files-found: warn
