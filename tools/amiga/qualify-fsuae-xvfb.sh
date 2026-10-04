@@ -20,6 +20,8 @@ sleep 1
 OUT="build/m68k-amiga/fsuae-debug.txt"
 mkdir -p "$(dirname "$OUT")"
 rm -f "$OUT" "${OUT%.txt}.trace" "${OUT%.txt}.trace.verified" "${OUT%.txt}.qualification.json"
+DEBUG_READY="$TMP/debugger.ready"
+export AXIOMICA_DEBUG_READY_FILE="$DEBUG_READY"
 sh tools/amiga/run-fsuae-debug.sh "$ADF" "$OUT" &
 EMU_PID=$!
 
@@ -30,6 +32,7 @@ while [ $(date +%s) -lt "$deadline" ]; do
     sh tools/amiga/activate-fsuae-debugger-x11.sh
     # Give FS-UAE time to enter its console debugger before the PTY sends commands.
     sleep "${AXIOMICA_DEBUGGER_SETTLE:-3}"
+    : >"$DEBUG_READY"
     break
   fi
   kill -0 "$EMU_PID" 2>/dev/null || { echo "FS-UAE exited before debugger activation" >&2; exit 5; }
