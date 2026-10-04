@@ -42,7 +42,7 @@ jobs:
           set -euo pipefail
           mkdir -p build/aros-nightly
           python3 tools/amiga/fetch-aros-nightly.py build/aros-nightly
-          python3 tools/amiga/find-aros-rom.py build/aros-nightly build/aros-nightly/aros-amiga.rom
+          python3 tools/amiga/find-aros-rom.py build/aros-nightly build/aros-nightly/aros-amiga.rom build/aros-nightly/aros-amiga-ext.rom
 
       - name: Build exact qualification image
         run: make -f Makefile.m68k m68k-amiga
@@ -53,6 +53,7 @@ jobs:
       - name: AROS FS-UAE runtime qualification
         env:
           AXIOMICA_KICKSTART_ROM: build/aros-nightly/aros-amiga.rom
+          AXIOMICA_KICKSTART_EXT_ROM: build/aros-nightly/aros-amiga-ext.rom
           AXIOMICA_RUNTIME_FIRMWARE: aros
         run: sh tools/amiga/qualify-fsuae-xvfb.sh build/m68k-amiga/axiomicaos-amiga.adf
 
