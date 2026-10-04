@@ -42,12 +42,12 @@ jobs:
           set -euo pipefail
           mkdir -p build/aros-nightly
           python3 tools/amiga/fetch-aros-nightly.py build/aros-nightly
-          python3 tools/amiga/find-aros-rom.py build/aros-nightly build/aros-nightly/aros-amiga.rom build/aros-nightly/aros-amiga-ext.rom
+          python3 tools/amiga/find-aros-rom.py build/aros-nightly build/aros-nightly/aros-amiga.rom build/aros-nightly/aros-amiga-ext.rom\n          python3 tools/amiga/fetch-aros-boot-floppy.py build/aros-nightly
           python3 tools/amiga/inventory-aros-boot-media.py build/aros-nightly build/aros-nightly/boot-media-inventory.txt
 
       - name: Record AROS reference boot-block bytes
         run: |
-          dd if=build/aros-nightly/iso/Emergency-Boot.adf of=build/aros-nightly/reference-bootblock.bin bs=1024 count=1 status=none
+          dd if=build/aros-nightly/aros-boot-control.adf of=build/aros-nightly/reference-bootblock.bin bs=1024 count=1 status=none
           sha256sum build/aros-nightly/reference-bootblock.bin > build/aros-nightly/reference-bootblock.sha256
           od -An -tx1 -v build/aros-nightly/reference-bootblock.bin > build/aros-nightly/reference-bootblock.hex
 
@@ -88,7 +88,7 @@ jobs:
           AXIOMICA_KICKSTART_EXT_ROM: build/aros-nightly/aros-amiga-ext.rom
           AXIOMICA_RUNTIME_FIRMWARE: aros
           AXIOMICA_DEBUG_OUT: build/m68k-amiga/aros-control-debug.txt
-        run: sh tools/amiga/qualify-fsuae-xvfb.sh build/aros-nightly/Emergency-Boot-control.adf || true
+        run: sh tools/amiga/qualify-fsuae-xvfb.sh build/aros-nightly/AROS-Boot-control-marked.adf || true
 
       - name: AROS FS-UAE runtime qualification
         env:
