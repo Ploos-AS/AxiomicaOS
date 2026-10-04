@@ -24,7 +24,7 @@ PID=$!
 echo "FS-UAE PTY pid=$PID; activate console debugger action."
 
 sleep "${AXIOMICA_DEBUG_DELAY:-12}"
-if ! printf 'dm\n?\ns 000000 200000 41 58 4f 52\nq\n' >&3; then
+if ! printf 'dm\ns "AXOR" 000000 1000000\nq\n' >&3; then
   echo "failed to send debugger RAM-oracle discovery commands to FS-UAE PTY" >&2
   kill "$PID" 2>/dev/null || true
   wait "$PID" 2>/dev/null || true
