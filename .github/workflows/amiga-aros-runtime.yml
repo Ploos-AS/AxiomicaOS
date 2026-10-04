@@ -45,6 +45,10 @@ jobs:
           python3 tools/amiga/find-aros-rom.py build/aros-nightly build/aros-nightly/aros-amiga.rom build/aros-nightly/aros-amiga-ext.rom
           python3 tools/amiga/inventory-aros-boot-media.py build/aros-nightly build/aros-nightly/boot-media-inventory.txt
 
+      - name: Record AROS reference boot-block strings
+        run: |
+          strings -a -n 6 build/aros-nightly/iso/Emergency-Boot.adf | head -40 > build/aros-nightly/reference-boot-strings.txt
+
       - name: Build exact qualification image
         run: make -f Makefile.m68k m68k-amiga
 
@@ -96,4 +100,5 @@ jobs:
             build/m68k-amiga/*.qualification.json
             build/m68k-amiga/adf-structure.txt
             build/aros-nightly/boot-media-inventory.txt
+            build/aros-nightly/reference-boot-strings.txt
           if-no-files-found: warn
