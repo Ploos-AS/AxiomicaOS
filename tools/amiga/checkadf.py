@@ -15,6 +15,9 @@ def main() -> None:
     if len(data) != ADF_SIZE:
         raise SystemExit("unexpected ADF size")
     if data[:4] == b"DOS\0":
+        root_block = struct.unpack_from(">I", data, 8)[0]
+        if root_block != 880:
+            raise SystemExit(f"invalid DD root-block pointer: {root_block}, expected 880")
         offset = 1024
         payload = data[offset:]
         if payload[:4] != b"AXAM":
