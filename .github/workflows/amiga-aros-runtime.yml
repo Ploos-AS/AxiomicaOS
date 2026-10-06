@@ -42,7 +42,8 @@ jobs:
           set -euo pipefail
           mkdir -p build/aros-nightly
           python3 tools/amiga/fetch-aros-nightly.py build/aros-nightly
-          python3 tools/amiga/find-aros-rom.py build/aros-nightly build/aros-nightly/aros-amiga.rom build/aros-nightly/aros-amiga-ext.rom\n          python3 tools/amiga/fetch-aros-boot-floppy.py build/aros-nightly
+          python3 tools/amiga/find-aros-rom.py build/aros-nightly build/aros-nightly/aros-amiga.rom build/aros-nightly/aros-amiga-ext.rom
+          python3 tools/amiga/fetch-aros-boot-floppy.py build/aros-nightly
           python3 tools/amiga/inventory-aros-boot-media.py build/aros-nightly build/aros-nightly/boot-media-inventory.txt
 
       - name: Record AROS reference boot-block bytes
