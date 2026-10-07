@@ -36,7 +36,7 @@ for date in candidates:
     except Exception as exc:
         print(f"Skipping {date}: {exc}", flush=True)
         continue
-    names = sorted(set(re.findall(r"AROS-[0-9]{8}-amiga-m68k-boot-floppy\\.zip", page)))
+    names = sorted(set(re.findall(r"AROS-[0-9]{8}-amiga-m68k-boot-floppy[.]zip", page)))
     if names:
         chosen = (date, names[0])
         break
