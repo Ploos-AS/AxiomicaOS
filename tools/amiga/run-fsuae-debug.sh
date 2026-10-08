@@ -48,8 +48,18 @@ status=$?
 set -e
 exec 3>&-
 if [ "$status" -ne 0 ]; then
+  echo "--- debugger transcript diagnostics ---" >&2
+  grep -Ein "bfe001|dff180|debugger|^>|unknown command|illegal|error|PC=" "$OUT" | tail -n 60 >&2 || true
+  echo "--- debugger transcript tail ---" >&2
+  tail -n 50 "$OUT" >&2 || true
   echo "FS-UAE PTY exited unsuccessfully: $status" >&2
   exit "$status"
 fi
-python3 tools/amiga/fsuae-debugger-adapter.py "$OUT" "${OUT%.txt}.trace"
+if ! python3 tools/amiga/fsuae-debugger-adapter.py "$OUT" "${OUT%.txt}.trace"; then
+  echo "--- debugger transcript diagnostics ---" >&2
+  grep -Ein "bfe001|dff180|debugger|^>|unknown command|illegal|error|PC=" "$OUT" | tail -n 60 >&2 || true
+  echo "--- debugger transcript tail ---" >&2
+  tail -n 50 "$OUT" >&2 || true
+  exit 8
+fi
 sh tools/amiga/adapter-common.sh "${OUT%.txt}.trace" fs-uae "$ADF" "$FIRMWARE"
