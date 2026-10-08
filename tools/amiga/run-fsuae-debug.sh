@@ -36,7 +36,7 @@ if [ -n "${AXIOMICA_DEBUG_READY_FILE:-}" ]; then
 else
   sleep "${AXIOMICA_DEBUG_DELAY:-12}"
 fi
-if ! printf 'r\ndm\ns "AxiomicaOS" 000000 1000000\ns "AXAM" 000000 1000000\ns "AXS0" 000000 1000000\ns "AXCT" 000000 1000000\ns "AXBB" 000000 1000000\ns "AXOR" 000000 1000000\nq\n' >&3; then
+if ! printf 'r\nm bfe001 1\nm dff180 1\ndm\ns "AxiomicaOS" 000000 1000000\ns "AXAM" 000000 1000000\ns "AXS0" 000000 1000000\ns "AXCT" 000000 1000000\ns "AXBB" 000000 1000000\ns "AXOR" 000000 1000000\nq\n' >&3; then
   echo "failed to send debugger RAM-oracle discovery commands to FS-UAE PTY" >&2
   kill "$PID" 2>/dev/null || true
   wait "$PID" 2>/dev/null || true
