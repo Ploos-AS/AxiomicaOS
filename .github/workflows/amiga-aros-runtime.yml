@@ -1,0 +1,142 @@
+name: Amiga AROS hosted runtime
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'arch/m68k/**'
+      - 'machines/amiga/**'
+      - 'kernel/**'
+      - 'include/**'
+      - 'tools/amiga/**'
+      - 'Makefile.m68k'
+      - 'linker-amiga.ld'
+      - '.github/workflows/amiga-aros-runtime.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'arch/m68k/**'
+      - 'machines/amiga/**'
+      - 'kernel/**'
+      - 'include/**'
+      - 'tools/amiga/**'
+      - 'Makefile.m68k'
+      - 'linker-amiga.ld'
+      - '.github/workflows/amiga-aros-runtime.yml'
+
+jobs:
+  fsuae-aros:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install runtime dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y fs-uae xvfb xdotool gcc-m68k-linux-gnu binutils-m68k-linux-gnu curl p7zip-full
+
+      - name: Fetch official AROS m68k nightly
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p build/aros-nightly
+          python3 tools/amiga/fetch-aros-nightly.py build/aros-nightly
+          python3 tools/amiga/find-aros-rom.py build/aros-nightly build/aros-nightly/aros-amiga.rom build/aros-nightly/aros-amiga-ext.rom
+          python3 tools/amiga/fetch-aros-boot-floppy.py build/aros-nightly
+          python3 tools/amiga/inventory-aros-boot-media.py build/aros-nightly build/aros-nightly/boot-media-inventory.txt
+
+      - name: Record AROS reference boot-block bytes
+        run: |
+          dd if=build/aros-nightly/aros-boot-control.adf of=build/aros-nightly/reference-bootblock.bin bs=1024 count=1 status=none
+          sha256sum build/aros-nightly/reference-bootblock.bin > build/aros-nightly/reference-bootblock.sha256
+          od -An -tx1 -v build/aros-nightly/reference-bootblock.bin > build/aros-nightly/reference-bootblock.hex
+
+      - name: Prepare marked AROS boot control
+        run: |
+          python3 tools/amiga/mark-control-bootblock.py \
+            build/aros-nightly/aros-boot-control.adf \
+            build/aros-nightly/AROS-Boot-control-marked.adf
+
+      - name: Build exact qualification image
+        run: make -f Makefile.m68k m68k-amiga
+
+      - name: Compare ADF structure with AROS reference
+        run: |
+          python3 tools/amiga/compare-adf-structure.py \
+            build/aros-nightly/aros-boot-control.adf \
+            build/m68k-amiga/axiomicaos-amiga.adf \
+            build/m68k-amiga/adf-structure.txt
+
+      - name: Static qualification
+        run: python3 tools/amiga/qualify-static.py build/m68k-amiga/axiomicaos-amiga.adf
+
+      - name: ROM-only control image
+        run: |
+          dd if=/dev/zero of=build/aros-nightly/rom-only.adf bs=901120 count=1 status=none
+
+      - name: ROM-only control
+        env:
+          AXIOMICA_KICKSTART_ROM: build/aros-nightly/aros-amiga.rom
+          AXIOMICA_KICKSTART_EXT_ROM: build/aros-nightly/aros-amiga-ext.rom
+          AXIOMICA_RUNTIME_FIRMWARE: aros
+          AXIOMICA_DEBUG_OUT: build/m68k-amiga/rom-only-debug.txt
+        run: sh tools/amiga/qualify-fsuae-xvfb.sh build/aros-nightly/rom-only.adf || true
+
+      - name: AROS reference floppy control
+        env:
+          AXIOMICA_KICKSTART_ROM: build/aros-nightly/aros-amiga.rom
+          AXIOMICA_KICKSTART_EXT_ROM: build/aros-nightly/aros-amiga-ext.rom
+          AXIOMICA_RUNTIME_FIRMWARE: aros
+          AXIOMICA_DEBUG_OUT: build/m68k-amiga/aros-control-debug.txt
+          AXIOMICA_BOOT_DELAY: '25'
+          AXIOMICA_RUNTIME_TIMEOUT: '70'
+        run: sh tools/amiga/qualify-fsuae-xvfb.sh build/aros-nightly/AROS-Boot-control-marked.adf || true
+
+      - name: AROS unmodified floppy control
+        env:
+          AXIOMICA_KICKSTART_ROM: build/aros-nightly/aros-amiga.rom
+          AXIOMICA_KICKSTART_EXT_ROM: build/aros-nightly/aros-amiga-ext.rom
+          AXIOMICA_RUNTIME_FIRMWARE: aros
+          AXIOMICA_DEBUG_OUT: build/m68k-amiga/aros-unmodified-debug.txt
+          AXIOMICA_BOOT_DELAY: '25'
+          AXIOMICA_RUNTIME_TIMEOUT: '70'
+        run: sh tools/amiga/qualify-fsuae-xvfb.sh build/aros-nightly/aros-boot-control.adf || true
+
+      - name: AROS FS-UAE runtime qualification
+        env:
+          AXIOMICA_KICKSTART_ROM: build/aros-nightly/aros-amiga.rom
+          AXIOMICA_KICKSTART_EXT_ROM: build/aros-nightly/aros-amiga-ext.rom
+          AXIOMICA_RUNTIME_FIRMWARE: aros
+        run: sh tools/amiga/qualify-fsuae-xvfb.sh build/m68k-amiga/axiomicaos-amiga.adf
+
+      - name: Assert AROS evidence
+        run: |
+          test -s build/m68k-amiga/fsuae-debug.qualification.json
+          grep -q '"qualified": true' build/m68k-amiga/fsuae-debug.qualification.json
+          grep -q '"firmware": "aros"' build/m68k-amiga/fsuae-debug.qualification.json
+          python3 tools/amiga/verify-release-gate.py \
+            build/m68k-amiga/axiomicaos-amiga.adf \
+            build/m68k-amiga/fsuae-debug.qualification.json \
+            --firmware aros
+
+      - name: Publish AROS runtime evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: amiga-aros-runtime-evidence
+          path: |
+            build/m68k-amiga/fsuae-debug.txt
+            build/m68k-amiga/aros-control-debug.txt
+            build/m68k-amiga/aros-unmodified-debug.txt
+            build/m68k-amiga/rom-only-debug.txt
+            build/m68k-amiga/*.trace
+            build/m68k-amiga/*.verified
+            build/m68k-amiga/*.qualification.json
+            build/m68k-amiga/adf-structure.txt
+            build/aros-nightly/boot-media-inventory.txt
+            build/aros-nightly/reference-bootblock.sha256
+            build/aros-nightly/reference-bootblock.hex
+            build/aros-nightly/aros-boot-control.adf
+            build/aros-nightly/AROS-Boot-control-marked.adf
+          if-no-files-found: warn

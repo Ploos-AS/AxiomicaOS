@@ -7,6 +7,16 @@ import struct
 
 ADF_SIZE = 901120
 
+def amiga_boot_sum(block: bytes) -> int:
+    total = 0
+    for off in range(0, 1024, 4):
+        value = struct.unpack_from(">I", block, off)[0]
+        old = total
+        total = (total + value) & 0xFFFFFFFF
+        if total < old:
+            total = (total + 1) & 0xFFFFFFFF
+    return total
+
 def main() -> None:
     p = argparse.ArgumentParser()
     p.add_argument("image", type=Path)
@@ -15,6 +25,17 @@ def main() -> None:
     if len(data) != ADF_SIZE:
         raise SystemExit("unexpected ADF size")
     if data[:4] == b"DOS\0":
+        if amiga_boot_sum(data[:1024]) != 0xFFFFFFFF:
+            raise SystemExit("invalid Amiga boot-block end-around-carry checksum")
+        root_block = struct.unpack_from(">I", data, 8)[0]
+        if root_block != 880:
+            raise SystemExit(f"invalid DD root-block pointer: {root_block}, expected 880")
+        root = data[root_block * 512:(root_block + 1) * 512]
+        root_words = struct.unpack(">128I", root)
+        if root_words[0] != 2 or root_words[-1] != 1:
+            raise SystemExit("invalid OFS root-block type")
+        if sum(root_words) & 0xFFFFFFFF:
+            raise SystemExit("invalid OFS root-block checksum")
         offset = 1024
         payload = data[offset:]
         if payload[:4] != b"AXAM":

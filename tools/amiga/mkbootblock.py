@@ -7,6 +7,7 @@ import struct
 
 SIZE = 1024
 CODE_OFFSET = 12
+ROOT_BLOCK = 880
 
 def amiga_checksum(block: bytes) -> int:
     total = 0
@@ -28,7 +29,9 @@ def main() -> None:
         raise SystemExit(f"stage-0 too large: {len(code)} > {SIZE-CODE_OFFSET}")
     block = bytearray(SIZE)
     block[0:4] = b"DOS\0"
-    # checksum at 4..7 is zero while calculated; root block remains zero.
+    # Standard DD floppy root block is logical block 880.
+    struct.pack_into(">I", block, 8, ROOT_BLOCK)
+    # checksum at 4..7 is zero while calculated.
     block[CODE_OFFSET:CODE_OFFSET + len(code)] = code
     # Executable stage-0 must begin exactly where the ROM boot convention
     # transfers control after the 12-byte DOS/checksum/root header.

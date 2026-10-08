@@ -21,6 +21,16 @@
 /* CIA-A parallel port data register: useful as a machine-visible oracle. */
 #define AMIGA_CIAA_PRA (*(volatile ax_u8 *)0x00BFE001u)
 
+/* Relocatable RAM oracle for unattended emulator qualification. */
+#define AXIOMICA_AMIGA_ORACLE_MAGIC 0x41584F52u /* AXOR */
+struct axiomica_amiga_oracle {
+    ax_u32 magic;
+    ax_u32 image_base;
+    volatile ax_u8 state;
+    ax_u8 reserved[3];
+};
+extern volatile struct axiomica_amiga_oracle axiomica_amiga_oracle;
+
 /* Deterministic native proof-of-life colours for emulator/hardware tests. */
 #define AMIGA_COLOR_BOOTING 0x0002u
 #define AMIGA_COLOR_KERNEL  0x00F0u

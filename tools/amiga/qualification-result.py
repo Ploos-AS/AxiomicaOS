@@ -9,6 +9,7 @@ p.add_argument("--static",action="store_true")
 p.add_argument("--runtime-log",type=Path)
 p.add_argument("--image",type=Path)
 p.add_argument("--emulator",default="unknown")
+p.add_argument("--firmware",default="unknown")
 a=p.parse_args()
 
 runtime=False
@@ -32,6 +33,7 @@ result={
   "runtime_pass":runtime,
   "qualified":bool(a.static and runtime),
   "emulator":a.emulator,
+  "firmware":a.firmware,
   "image_sha256":image_sha256,
   "image_size":image_size,
 }

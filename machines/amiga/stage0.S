@@ -28,8 +28,19 @@
 .set STACK_SIZE,         8192
 
 axiomica_amiga_stage0:
+    bra.s   stage0_entry
+    .ascii  "AXBB"
+stage0_entry:
+    /* Persistent low-memory execution breadcrumb for debugger qualification. */
+    move.l  #0x41585330,0x00000100  /* "AXS0" */
     move.w  #0x0002,0x00dff180
     move.l  %a1,%a2
+    move.l  IO_OFFSET(%a2),%d4      /* boot partition origin from strap */
+
+    /* Do not depend on firmware preserving ExecBase in A6 for boot code. */
+    move.l  4.w,%d0
+    beq     stage0_fail
+    move.l  %d0,%a6
 
     /* Pre-V36 trackdisk DMA buffer must be Chip RAM. */
     move.l  #512,%d0
@@ -43,7 +54,9 @@ axiomica_amiga_stage0:
     move.w  #CMD_READ,IO_COMMAND(%a2)
     move.l  #512,IO_LENGTH(%a2)
     move.l  %a5,IO_DATA(%a2)
-    move.l  #AXAM_DISK_OFFSET,IO_OFFSET(%a2)
+    move.l  %d4,%d0
+    add.l   #AXAM_DISK_OFFSET,%d0
+    move.l  %d0,IO_OFFSET(%a2)
     bsr     stage0_doio
     tst.l   %d0
     bne     stage0_fail_bounce
@@ -93,7 +106,7 @@ axiomica_amiga_stage0:
 1:
     bsr     stage0_copy_bytes
     sub.l   %d2,%d1
-    move.l  #AXAM_DISK_OFFSET+512,%d4
+    add.l   #AXAM_DISK_OFFSET+512,%d4
     tst.l   %d1
     beq.s   stage0_verify
 

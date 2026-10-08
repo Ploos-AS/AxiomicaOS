@@ -50,7 +50,8 @@ jobs:
         run: |
           python3 tools/amiga/verify-release-gate.py \
             build/m68k-amiga/axiomicaos-amiga.adf \
-            build/m68k-amiga/fsuae-debug.qualification.json
+            build/m68k-amiga/fsuae-debug.qualification.json \
+            --firmware kickstart
 
       - name: Publish evidence
         if: always()

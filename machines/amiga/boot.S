@@ -8,6 +8,7 @@
     .section .text.entry,"ax"
     .globl _axiomica_amiga_start
     .extern kmain
+    .extern axiomica_amiga_oracle
 
 _axiomica_amiga_start:
     move.w  #0x2700,%sr
@@ -20,6 +21,11 @@ _axiomica_amiga_start:
     move.l  -4(%a0),%d0
     andi.l  #0xfffffffc,%d0
     move.l  %d0,%sp
+
+    /* Publish the relocatable image base for debugger/runtime qualification. */
+    lea     _axiomica_amiga_start(%pc),%a0
+    lea     axiomica_amiga_oracle(%pc),%a1
+    move.l  %a0,4(%a1)
 
     clr.l   -(%sp)
     clr.l   -(%sp)

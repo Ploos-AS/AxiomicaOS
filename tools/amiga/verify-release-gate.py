@@ -9,6 +9,7 @@ import json
 p = argparse.ArgumentParser()
 p.add_argument("image", type=Path)
 p.add_argument("evidence", type=Path)
+p.add_argument("--firmware", choices=("kickstart","aros"))
 a = p.parse_args()
 
 if not a.image.is_file():
@@ -32,6 +33,9 @@ required = {
     "runtime_pass": True,
     "qualified": True,
 }
+if a.firmware is not None:
+    required["firmware"] = a.firmware
+
 for key, expected in required.items():
     if result.get(key) != expected:
         raise SystemExit(f"RELEASE GATE FAIL: {key} is not {expected!r}")

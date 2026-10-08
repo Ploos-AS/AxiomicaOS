@@ -4,6 +4,7 @@ set -eu
 LOG=$1
 EMU=$2
 IMAGE=${3:-}
+FIRMWARE=${4:-kickstart}
 VERIFIED="${LOG}.verified"
 RESULT="${LOG%.*}.qualification.json"
 
@@ -15,5 +16,6 @@ python3 tools/amiga/qualification-result.py \
   --static \
   --runtime-log "$VERIFIED" \
   --image "$IMAGE" \
-  --emulator "$EMU" > "$RESULT"
+  --emulator "$EMU" \
+  --firmware "$FIRMWARE" > "$RESULT"
 cat "$RESULT"
