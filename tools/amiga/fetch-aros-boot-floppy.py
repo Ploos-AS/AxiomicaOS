@@ -36,12 +36,12 @@ for date in candidates:
     except Exception as exc:
         print(f"Skipping {date}: {exc}", flush=True)
         continue
-    names = sorted(set(re.findall(r"AROS-[0-9]{8}-amiga-m68k-boot-floppy[.]zip", page)))
+    names = sorted(set(re.findall(r"AROS-[0-9]{8}-amiga-m68k-boot-floppy[.](?:lha|zip)", page)))
     if names:
         chosen = (date, names[0])
         break
 if chosen is None:
-    raise SystemExit("No official amiga-m68k boot-floppy ZIP found in recent SourceForge nightly listings")
+    raise SystemExit("No official amiga-m68k boot-floppy archive found in recent SourceForge nightly listings")
 
 date, name = chosen
 print(f"AROS boot floppy selected: {date}/{name}; ISO date={iso_date}", flush=True)
