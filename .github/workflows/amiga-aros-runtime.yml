@@ -55,8 +55,8 @@ jobs:
       - name: Prepare marked AROS boot control
         run: |
           python3 tools/amiga/mark-control-bootblock.py \
-            build/aros-nightly/iso/Emergency-Boot.adf \
-            build/aros-nightly/Emergency-Boot-control.adf
+            build/aros-nightly/aros-boot-control.adf \
+            build/aros-nightly/AROS-Boot-control-marked.adf
 
       - name: Build exact qualification image
         run: make -f Makefile.m68k m68k-amiga
@@ -64,7 +64,7 @@ jobs:
       - name: Compare ADF structure with AROS reference
         run: |
           python3 tools/amiga/compare-adf-structure.py \
-            build/aros-nightly/iso/Emergency-Boot.adf \
+            build/aros-nightly/aros-boot-control.adf \
             build/m68k-amiga/axiomicaos-amiga.adf \
             build/m68k-amiga/adf-structure.txt
 
