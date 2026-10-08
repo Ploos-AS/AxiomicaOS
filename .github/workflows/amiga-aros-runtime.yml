@@ -89,6 +89,8 @@ jobs:
           AXIOMICA_KICKSTART_EXT_ROM: build/aros-nightly/aros-amiga-ext.rom
           AXIOMICA_RUNTIME_FIRMWARE: aros
           AXIOMICA_DEBUG_OUT: build/m68k-amiga/aros-control-debug.txt
+          AXIOMICA_BOOT_DELAY: '25'
+          AXIOMICA_RUNTIME_TIMEOUT: '70'
         run: sh tools/amiga/qualify-fsuae-xvfb.sh build/aros-nightly/AROS-Boot-control-marked.adf || true
 
       - name: AROS FS-UAE runtime qualification
@@ -124,4 +126,6 @@ jobs:
             build/aros-nightly/boot-media-inventory.txt
             build/aros-nightly/reference-bootblock.sha256
             build/aros-nightly/reference-bootblock.hex
+            build/aros-nightly/aros-boot-control.adf
+            build/aros-nightly/AROS-Boot-control-marked.adf
           if-no-files-found: warn
