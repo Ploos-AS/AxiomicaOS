@@ -93,6 +93,16 @@ jobs:
           AXIOMICA_RUNTIME_TIMEOUT: '70'
         run: sh tools/amiga/qualify-fsuae-xvfb.sh build/aros-nightly/AROS-Boot-control-marked.adf || true
 
+      - name: AROS unmodified floppy control
+        env:
+          AXIOMICA_KICKSTART_ROM: build/aros-nightly/aros-amiga.rom
+          AXIOMICA_KICKSTART_EXT_ROM: build/aros-nightly/aros-amiga-ext.rom
+          AXIOMICA_RUNTIME_FIRMWARE: aros
+          AXIOMICA_DEBUG_OUT: build/m68k-amiga/aros-unmodified-debug.txt
+          AXIOMICA_BOOT_DELAY: '25'
+          AXIOMICA_RUNTIME_TIMEOUT: '70'
+        run: sh tools/amiga/qualify-fsuae-xvfb.sh build/aros-nightly/aros-boot-control.adf || true
+
       - name: AROS FS-UAE runtime qualification
         env:
           AXIOMICA_KICKSTART_ROM: build/aros-nightly/aros-amiga.rom
@@ -118,6 +128,7 @@ jobs:
           path: |
             build/m68k-amiga/fsuae-debug.txt
             build/m68k-amiga/aros-control-debug.txt
+            build/m68k-amiga/aros-unmodified-debug.txt
             build/m68k-amiga/rom-only-debug.txt
             build/m68k-amiga/*.trace
             build/m68k-amiga/*.verified
